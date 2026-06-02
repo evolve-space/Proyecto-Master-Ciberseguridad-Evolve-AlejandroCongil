@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberSec RAG</title>
+<style>
+:root {
+  --bg:      #0d1117;
+  --bg2:     #161b22;
+  --bg3:     #21262d;
+  --border:  #30363d;
+  --green:   #3fb950;
+  --green2:  #238636;
+  --blue:    #58a6ff;
+  --purple:  #bc8cff;
+  --orange:  #f0883e;
+  --red:     #f85149;
+  --text:    #c9d1d9;
+  --dim:     #8b949e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Consolas', 'Courier New', monospace;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────── */
+header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+header h1 { font-size: 15px; color: var(--green); letter-spacing: 2px; }
+#stats-badge {
+  font-size: 12px; color: var(--dim);
+  background: var(--bg3); padding: 3px 10px;
+  border-radius: 20px; border: 1px solid var(--border);
+}
+#filter-pill {
+  display: none; margin-left: auto;
+  font-size: 12px; color: var(--orange);
+  background: var(--bg3); padding: 3px 10px;
+  border-radius: 20px; border: 1px solid var(--border);
+}
+
+/* ── Layout ────────────────────────────────────── */
+.layout { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Sidebar ───────────────────────────────────── */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 16px 12px;
+  display: flex; flex-direction: column; gap: 22px;
+  overflow-y: auto;
+}
+.sidebar-label {
+  font-size: 10px; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+.filter-btn {
+  display: block; width: 100%; text-align: left;
+  background: none; border: 1px solid transparent;
+  color: var(--text); padding: 5px 9px;
+  border-radius: 5px; cursor: pointer;
+  font-family: inherit; font-size: 12px;
+  transition: all .12s;
+}
+.filter-btn:hover { background: var(--bg3); border-color: var(--border); }
+.filter-btn.active { background: var(--bg3); border-color: var(--green2); color: var(--green); }
+
+/* Upload */
+.upload-zone {
+  border: 1px dashed var(--border); border-radius: 7px;
+  padding: 14px 8px; text-align: center; cursor: pointer;
+  transition: border-color .15s;
+}
+.upload-zone:hover, .upload-zone.over { border-color: var(--green); }
+.upload-zone p { font-size: 11px; color: var(--dim); line-height: 1.6; }
+.upload-zone input { display: none; }
+#ingest-msg {
+  font-size: 11px; min-height: 16px;
+  margin-top: 6px; color: var(--green);
+}
+
+.sidebar-footer { margin-top: auto; font-size: 10px; color: var(--border); line-height: 2; }
+.sidebar-footer span { color: var(--dim); }
+
+/* ── Main ──────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Messages */
+#messages {
+  flex: 1; overflow-y: auto;
+  padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+/* Welcome */
+.welcome {
+  margin: auto; text-align: center;
+  max-width: 460px; padding: 30px;
+}
+.welcome h2 { color: var(--green); font-size: 17px; margin-bottom: 10px; }
+.welcome p { color: var(--dim); font-size: 13px; line-height: 1.8; }
+.welcome-hint {
+  margin-top: 18px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px; text-align: left;
+}
+.welcome-hint p { font-size: 12px; color: var(--dim); margin-bottom: 8px; }
+.welcome-hint li { font-size: 12px; color: var(--blue); list-style: none; line-height: 2; }
+
+/* User message */
+.msg-user .bubble {
+  display: inline-block;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 7px; padding: 9px 13px;
+  font-size: 13px; color: var(--blue);
+  max-width: 680px;
+}
+
+/* Assistant message */
+.msg-assistant { max-width: 760px; }
+.sources {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px;
+}
+.src-tag {
+  font-size: 10px; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 2px 8px; color: var(--dim);
+}
+.src-tag .d { color: var(--orange); }
+.src-tag .t { color: var(--purple); }
+.response-box {
+  background: var(--bg2);
+  border-left: 3px solid var(--green);
+  border-radius: 0 7px 7px 0;
+  padding: 13px 16px;
+  font-size: 13px; line-height: 1.75;
+  white-space: pre-wrap; word-break: break-word;
+}
+.response-box.error { border-left-color: var(--red); color: var(--red); }
+
+/* Spinner */
+.spin {
+  display: inline-block; width: 13px; height: 13px;
+  border: 2px solid var(--border); border-top-color: var(--green);
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Input bar ─────────────────────────────────── */
+.input-bar {
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 14px 20px;
+  display: flex; gap: 10px; align-items: flex-end;
+  flex-shrink: 0;
+}
+#q {
+  flex: 1; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 9px 13px; color: var(--text);
+  font-family: inherit; font-size: 13px;
+  resize: none; min-height: 42px; max-height: 120px;
+  outline: none; transition: border-color .12s;
+}
+#q:focus { border-color: var(--green); }
+#q::placeholder { color: var(--dim); }
+#send {
+  background: var(--green2); color: #fff;
+  border: none; border-radius: 7px;
+  padding: 9px 18px; cursor: pointer;
+  font-family: inherit; font-size: 13px;
+  white-space: nowrap; transition: background .12s;
+}
+#send:hover { background: var(--green); color: var(--bg); }
+#send:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>◆ CYBERSEC-RAG</h1>
+  <span id="stats-badge">conectando…</span>
+  <span id="filter-pill"></span>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-label">Filtrar</div>
+      <button class="filter-btn active" data-f="">◈ Todo</button>
+      <button class="filter-btn" data-f="knowledge">◎ Conocimiento</button>
+      <button class="filter-btn" data-f="methodology">◎ Metodología</button>
+      <button class="filter-btn" data-f="tool">◎ Herramientas</button>
+      <button class="filter-btn" data-f="writeup">◎ Writeups</button>
+      <button class="filter-btn" data-f="external-tool">◎ Arsenal externo</button>
+    </div>
+
+    <div>
+      <div class="sidebar-label">Ingestar ZIP</div>
+      <div class="upload-zone" id="drop-zone">
+        <input type="file" id="zip-file" accept=".zip">
+        <p>Arrastra un ZIP aquí<br>o haz clic para seleccionar</p>
+      </div>
+      <div id="ingest-msg"></div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div>Ingesta automática:</div>
+      <div><span>python main.py watch</span></div>
+      <div style="margin-top:6px">Carpeta vigilada:</div>
+      <div><span>data/inbox/</span></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div id="messages">
+      <div class="welcome" id="welcome">
+        <h2>Base de conocimiento vacía</h2>
+        <p>Ingesta tu primer ZIP para empezar.<br>
+           Usa el panel lateral o arrastra un archivo directamente.</p>
+        <div class="welcome-hint">
+          <p>Estructura esperada en el ZIP:</p>
+          <ul>
+            <li>📄 TRANSCRIPCIÓN.txt</li>
+            <li>📄 RESUMEN.txt</li>
+            <li>🗺 sesion.xmind</li>
+            <li>📁 APUNTES/ (txt + capturas .png/.jpg)</li>
+            <li>📁 RECURSOS COMPARTIDOS/ (links)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <textarea id="q" placeholder="Pregunta sobre tu material de estudio… (Enter para enviar, Shift+Enter nueva línea)" rows="1"></textarea>
+      <button id="send">Enviar</button>
+    </div>
+  </main>
+</div>
+
+<script>
+const msgArea = document.getElementById('messages');
+const input   = document.getElementById('q');
+const sendBtn = document.getElementById('send');
+const statsBadge = document.getElementById('stats-badge');
+const filterPill = document.getElementById('filter-pill');
+const dropZone   = document.getElementById('drop-zone');
+const zipInput   = document.getElementById('zip-file');
+const ingestMsg  = document.getElementById('ingest-msg');
+
+let activeFilter = '';
+
+// ── Auto-resize textarea ─────────────────────────
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+});
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+sendBtn.addEventListener('click', send);
+
+// ── Filter buttons ───────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.f;
+    if (activeFilter) {
+      filterPill.style.display = 'block';
+      filterPill.textContent = 'Filtro: ' + activeFilter;
+    } else {
+      filterPill.style.display = 'none';
+    }
+  });
+});
+
+// ── Upload / drag-drop ───────────────────────────
+dropZone.addEventListener('click', () => zipInput.click());
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.endsWith('.zip')) uploadZip(f);
+});
+zipInput.addEventListener('change', () => { if (zipInput.files[0]) uploadZip(zipInput.files[0]); });
+
+async function uploadZip(file) {
+  ingestMsg.style.color = 'var(--dim)';
+  ingestMsg.innerHTML = '<span class="spin"></span> Ingestando…';
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch('/api/ingest', { method: 'POST', body: form });
+    const data = await res.json();
+    if (res.ok) {
+      ingestMsg.style.color = 'var(--green)';
+      ingestMsg.textContent = `✓ ${data.chunks_added} fragmentos añadidos`;
+      loadStats();
+    } else {
+      ingestMsg.style.color = 'var(--red)';
+      ingestMsg.textContent = '✗ ' + (data.detail || 'Error');
+    }
+  } catch {
+    ingestMsg.style.color = 'var(--red)';
+    ingestMsg.textContent = '✗ Error de conexión';
+  }
+  zipInput.value = '';
+}
+
+// ── Query / stream ───────────────────────────────
+async function send() {
+  const q = input.value.trim();
+  if (!q) return;
+
+  document.getElementById('welcome')?.remove();
+
+  addMsg('user', q);
+  input.value = '';
+  input.style.height = 'auto';
+  sendBtn.disabled = true;
+  input.disabled = true;
+
+  const msgEl = addMsg('assistant', null);
+  const sourcesEl = msgEl.querySelector('.sources');
+  const boxEl     = msgEl.querySelector('.response-box');
+  boxEl.innerHTML = '<span class="spin"></span>';
+
+  try {
+    const res = await fetch('/api/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: q, category: activeFilter || null })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      boxEl.textContent = 'Error: ' + (err.detail || res.statusText);
+      boxEl.classList.add('error');
+      return;
+    }
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    let started = false;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6);
+        if (raw === '[DONE]') break;
+        try {
+          const ev = JSON.parse(raw);
+          if (ev.sources) {
+            sourcesEl.innerHTML = ev.sources.map(s =>
+              `<span class="src-tag"><span class="d">${s.date}</span> · <span class="t">${s.type}</span></span>`
+            ).join('');
+          }
+          if (ev.text !== undefined) {
+            if (!started) { boxEl.textContent = ''; started = true; }
+            boxEl.textContent += ev.text;
+            msgArea.scrollTop = msgArea.scrollHeight;
+          }
+        } catch { /* partial JSON — ignore */ }
+      }
+    }
+  } catch {
+    boxEl.textContent = 'Error de conexión con el servidor.';
+    boxEl.classList.add('error');
+  } finally {
+    sendBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+function addMsg(role, text) {
+  const div = document.createElement('div');
+  if (role === 'user') {
+    div.className = 'msg-user';
+    div.innerHTML = `<div class="bubble">&gt; ${esc(text)}</div>`;
+  } else {
+    div.className = 'msg-assistant';
+    div.innerHTML = '<div class="sources"></div><div class="response-box"></div>';
+  }
+  msgArea.appendChild(div);
+  msgArea.scrollTop = msgArea.scrollHeight;
+  return div;
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Stats ────────────────────────────────────────
+async function loadStats() {
+  try {
+    const d = await (await fetch('/api/stats')).json();
+    statsBadge.textContent = `${d.total_chunks} fragmentos · ${d.total_sessions} sesiones`;
+    const w = document.getElementById('welcome');
+    if (w && d.total_chunks > 0) {
+      w.querySelector('h2').textContent = 'Base de conocimiento activa';
+      w.querySelector('p').textContent =
+        `${d.total_chunks} fragmentos de ${d.total_sessions} sesión(es) disponibles. Haz una pregunta.`;
+    }
+  } catch {
+    statsBadge.textContent = 'sin conexión';
+  }
+}
+loadStats();
+</script>
+</body>
+</html>

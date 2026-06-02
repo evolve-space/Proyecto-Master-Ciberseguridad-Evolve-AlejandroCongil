@@ -1,0 +1,36 @@
+paths:
+  # Carpeta donde depositar los ZIPs de cada sesión para ser procesados
+  inbox: "data/inbox"
+  processed: "data/processed"
+  chroma_db: "data/chroma_db"
+  processed_log: "data/processed_log.json"
+
+ingestion:
+  chunk_size: 1500
+  chunk_overlap: 200
+  image_extensions: [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"]
+  # false = los ZIPs se quedan en inbox/ como archivo permanente
+  move_after_ingest: false
+
+chromadb:
+  collection_name: "cybersec_knowledge"
+
+claude:
+  model: "claude-sonnet-4-6"
+  vision_model: "claude-haiku-4-5-20251001"
+  max_tokens: 4096
+  top_k_results: 5
+
+whisper:
+  # Tamaños: tiny (rapidísimo), base (recomendado), small (mejor calidad), medium, large-v3
+  # El modelo se descarga automáticamente la primera vez (~150 MB para base)
+  model_size: "base"
+  language: "es"   # es = español, null = detección automática
+  device: "cpu"    # cpu siempre; gpu si tienes CUDA instalado
+  # Segundos entre fotogramas para análisis visual (90 = 1 cada 1m30s)
+  # Aumentar si la clase tiene pocas diapositivas, reducir si cambian muy rápido
+  frame_interval: 15
+
+web:
+  host: "127.0.0.1"
+  port: 8000

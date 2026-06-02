@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSINT Framework — Progreso</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e13;--bg2:#0f1419;--bg3:#161c24;--bg4:#1e2733;
+  --border:#2a3542;--border2:#3a4a5c;
+  --green:#00ff88;--green2:#00cc66;--blue:#4fc3f7;
+  --yellow:#ffd54f;--orange:#ff9800;--red:#f44336;
+  --text:#c9d1d9;--text2:#8b949e;--text3:#6e7681;
+}
+body{background:var(--bg);color:var(--text);font-family:'Consolas','Monaco',monospace;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* TOP BAR */
+#topbar{display:flex;align-items:center;padding:10px 20px;background:var(--bg2);border-bottom:1px solid var(--border);gap:16px;flex-shrink:0}
+#topbar h1{font-size:13px;color:var(--green);letter-spacing:2px;text-transform:uppercase;white-space:nowrap}
+.overall-bar{flex:1;max-width:400px;background:var(--border);height:8px;border-radius:4px;overflow:hidden}
+.overall-fill{height:100%;background:var(--green);border-radius:4px;transition:width .4s}
+#overall-pct{font-size:12px;color:var(--text2);white-space:nowrap}
+.top-links{display:flex;gap:8px;margin-left:auto}
+.top-link{font-size:11px;padding:4px 12px;border:1px solid var(--border2);border-radius:4px;color:var(--text2);text-decoration:none;background:var(--bg3)}
+.top-link:hover{color:var(--text);border-color:var(--green)}
+#search-input{background:var(--bg4);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:5px 12px;font-family:inherit;font-size:12px;width:200px}
+#search-input:focus{outline:none;border-color:var(--blue)}
+#search-input::placeholder{color:var(--text3)}
+
+/* MAIN LAYOUT */
+#layout{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR — category list */
+#sidebar{width:240px;min-width:240px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:8px 0}
+.cat-item{padding:9px 14px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;display:flex;align-items:center;gap:8px}
+.cat-item:hover{background:var(--bg3)}
+.cat-item.active{background:var(--bg4);border-left-color:var(--green)}
+.cat-name{font-size:12px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-badge{font-size:10px;padding:1px 6px;border-radius:10px;background:var(--bg4);color:var(--text3);white-space:nowrap}
+.cat-badge.full{background:#0d2a1a;color:var(--green2)}
+.cat-badge.partial{background:#2a2000;color:var(--yellow)}
+
+/* TREE AREA */
+#tree-area{flex:1;overflow-y:auto;padding:16px 20px}
+#tree-header{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+#tree-header h2{font-size:15px;color:var(--blue);margin-bottom:6px}
+#tree-header p{font-size:11px;color:var(--text3)}
+.progress-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.prog-bar{flex:1;max-width:300px;background:var(--border);height:6px;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
+.prog-label{font-size:11px;color:var(--text2)}
+
+/* TREE NODES */
+.tree-folder{margin-bottom:4px}
+.folder-header{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:4px;cursor:pointer;user-select:none;transition:background .1s}
+.folder-header:hover{background:var(--bg3)}
+.folder-toggle{font-size:10px;color:var(--text3);width:12px;transition:transform .15s;display:inline-block}
+.folder-toggle.open{transform:rotate(90deg)}
+.folder-name{font-size:12px;font-weight:600;color:var(--text);flex:1}
+.folder-prog{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--bg4);color:var(--text3);white-space:nowrap}
+.folder-prog.done{background:#0d2a1a;color:var(--green2)}
+.folder-prog.partial{background:#2a2000;color:var(--yellow)}
+.folder-children{margin-left:20px;border-left:1px solid var(--border);padding-left:12px;margin-bottom:4px;display:none}
+.folder-children.open{display:block}
+
+.tool-row{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:4px;transition:background .1s;cursor:pointer}
+.tool-row:hover{background:var(--bg3)}
+.tool-row.done-tool .tool-name{color:var(--green2);text-decoration:line-through;opacity:.8}
+.tool-check{width:14px;height:14px;accent-color:var(--green);cursor:pointer;flex-shrink:0}
+.tool-name{font-size:12px;color:var(--text2);flex:1}
+.tool-link{color:var(--text3);font-size:10px;text-decoration:none;padding:1px 5px;border-radius:3px;border:1px solid var(--border);transition:all .1s}
+.tool-link:hover{color:var(--blue);border-color:var(--blue)}
+.flag{font-size:9px;padding:1px 4px;border-radius:2px;font-weight:700}
+.flag-T{background:#1a2a1a;color:#8bc34a}
+.flag-R{background:#2a1a0a;color:var(--orange)}
+.flag-M{background:#1a1a2a;color:#ce93d8}
+.flag-D{background:#2a1a1a;color:var(--red)}
+
+/* SEARCH RESULTS */
+#search-results{padding:8px 0}
+.search-match{padding:7px 10px;border-radius:4px;margin-bottom:3px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.search-match:hover{background:var(--bg3)}
+.search-path{font-size:10px;color:var(--text3);flex:1}
+.search-tool-name{font-size:12px;color:var(--text);min-width:160px}
+
+/* LOADING */
+#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;color:var(--text3);font-size:13px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* STATS PANEL */
+#stats-panel{display:flex;gap:20px;padding:8px 20px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0}
+.stat{text-align:center}
+.stat-val{font-size:16px;font-weight:700;color:var(--green)}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:1px}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>OSINT Framework</h1>
+  <div class="overall-bar"><div class="overall-fill" id="overall-fill" style="width:0%"></div></div>
+  <span id="overall-pct">0% completado</span>
+  <input id="search-input" type="text" placeholder="Buscar herramienta..." oninput="onSearch(this.value)">
+  <div class="top-links">
+    <a class="top-link" href="/lab">Lab</a>
+    <a class="top-link" href="/">RAG</a>
+    <a class="top-link" href="https://osintframework.com" target="_blank">osintframework.com</a>
+  </div>
+</div>
+
+<div id="layout">
+  <div id="sidebar"></div>
+  <div id="tree-area">
+    <div id="loading">
+      <div class="spinner"></div>
+      <span>Cargando OSINT Framework...</span>
+    </div>
+  </div>
+</div>
+
+<div id="stats-panel">
+  <div class="stat"><div class="stat-val" id="s-total">-</div><div class="stat-lbl">Total herramientas</div></div>
+  <div class="stat"><div class="stat-val" id="s-done" style="color:var(--green)">0</div><div class="stat-lbl">Completadas</div></div>
+  <div class="stat"><div class="stat-val" id="s-cats" style="color:var(--blue)">-</div><div class="stat-lbl">Categorias</div></div>
+  <div class="stat"><div class="stat-val" id="s-cats-done" style="color:var(--yellow)">0</div><div class="stat-lbl">Categorias completas</div></div>
+</div>
+
+<script>
+const ARF_URL = '/api/arf';
+const CACHE_KEY = 'arf_json_cache';
+const CACHE_TTL = 7 * 24 * 3600 * 1000; // 7 days
+const STATE_KEY = 'arf_progress';
+
+let treeData = null;
+let progress = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
+let currentCat = null;
+let allTools = []; // flat list {id, name, url, path, flags}
+
+// ── LOAD DATA ──────────────────────────────────────────────────────────────
+async function loadData() {
+  const cached = localStorage.getItem(CACHE_KEY);
+  if (cached) {
+    try {
+      const { ts, data } = JSON.parse(cached);
+      if (Date.now() - ts < CACHE_TTL) {
+        treeData = data;
+        init();
+        return;
+      }
+    } catch(e) {}
+  }
+  try {
+    const r = await fetch(ARF_URL);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    treeData = await r.json();
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: treeData }));
+    init();
+  } catch(e) {
+    document.getElementById('loading').innerHTML = `
+      <div style="color:var(--red);font-size:13px">Error cargando el framework: ${e.message}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">Comprueba tu conexion a internet y que el servidor este corriendo.</div>
+      <button onclick="localStorage.removeItem('${CACHE_KEY}');location.reload()" style="margin-top:12px;padding:8px 16px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;cursor:pointer;font-family:inherit">Reintentar</button>`;
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+function init() {
+  // treeData root = { name, children: [ top-level categories ] }
+  // The root node IS "OSINT Framework", its children are the categories
+  const categories = treeData.children || [];
+
+  // Build flat tool index
+  allTools = [];
+  categories.forEach(cat => collectTools(cat, [cat.name]));
+
+  renderSidebar(categories);
+  updateOverall();
+  updateStats();
+
+  // Select first category
+  if (categories.length) selectCat(categories[0]);
+}
+
+function collectTools(node, path) {
+  if (node.type === 'url' || !node.children || node.children.length === 0) {
+    const id = makeId(path.join('__') + '__' + node.name);
+    allTools.push({ id, name: node.name, url: node.url || '', path, flags: extractFlags(node.name) });
+  } else {
+    (node.children || []).forEach(ch => collectTools(ch, [...path, ch.name]));
+  }
+}
+
+function extractFlags(name) {
+  const flags = [];
+  if (/\(T\)/i.test(name)) flags.push('T');
+  if (/\(R\)/i.test(name)) flags.push('R');
+  if (/\(M\)/i.test(name)) flags.push('M');
+  if (/\(D\)/i.test(name)) flags.push('D');
+  return flags;
+}
+
+function makeId(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').substring(0, 80);
+}
+
+function toolId(path) {
+  return makeId(path.join('__'));
+}
+
+// ── PROGRESS HELPERS ───────────────────────────────────────────────────────
+function countNode(node, path) {
+  if (!node.children || node.children.length === 0) {
+    const id = makeId(path.join('__'));
+    return { total: 1, done: progress[id] ? 1 : 0 };
+  }
+  let total = 0, done = 0;
+  node.children.forEach(ch => {
+    const r = countNode(ch, [...path, ch.name]);
+    total += r.total; done += r.done;
+  });
+  return { total, done };
+}
+
+function updateOverall() {
+  let total = 0, done = 0;
+  (treeData.children || []).forEach(cat => {
+    const r = countNode(cat, [cat.name]);
+    total += r.total; done += r.done;
+  });
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('overall-fill').style.width = pct + '%';
+  document.getElementById('overall-pct').textContent = `${pct}% completado (${done}/${total})`;
+}
+
+function updateStats() {
+  const cats = treeData.children || [];
+  let totalTools = 0, doneCats = 0;
+  cats.forEach(cat => {
+    const r = countNode(cat, [cat.name]);
+    totalTools += r.total;
+    if (r.total && r.done === r.total) doneCats++;
+  });
+  document.getElementById('s-total').textContent = totalTools;
+  document.getElementById('s-done').textContent = Object.keys(progress).filter(k => progress[k]).length;
+  document.getElementById('s-cats').textContent = cats.length;
+  document.getElementById('s-cats-done').textContent = doneCats;
+}
+
+// ── SIDEBAR ────────────────────────────────────────────────────────────────
+function renderSidebar(categories) {
+  document.getElementById('sidebar').innerHTML = categories.map(cat => {
+    const r = countNode(cat, [cat.name]);
+    const pct = r.total ? Math.round((r.done / r.total) * 100) : 0;
+    const cls = r.done === r.total && r.total > 0 ? 'full' : (r.done > 0 ? 'partial' : '');
+    return `<div class="cat-item" id="cat_${makeId(cat.name)}" onclick="selectCat(getCatByName('${esc(cat.name)}'))">
+      <span class="cat-name">${cleanName(cat.name)}</span>
+      <span class="cat-badge ${cls}">${r.done}/${r.total}</span>
+    </div>`;
+  }).join('');
+}
+
+function refreshSidebar() {
+  (treeData.children || []).forEach(cat => {
+    const el = document.getElementById('cat_' + makeId(cat.name));
+    if (!el) return;
+    const r = countNode(cat, [cat.name]);
+    const cls = r.done === r.total && r.total > 0 ? 'full' : (r.done > 0 ? 'partial' : '');
+    const badge = el.querySelector('.cat-badge');
+    badge.textContent = `${r.done}/${r.total}`;
+    badge.className = `cat-badge ${cls}`;
+  });
+}
+
+function getCatByName(name) {
+  return (treeData.children || []).find(c => c.name === name);
+}
+
+function selectCat(cat) {
+  currentCat = cat;
+  // update active state
+  document.querySelectorAll('.cat-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('cat_' + makeId(cat.name));
+  if (el) el.classList.add('active');
+  renderTree(cat);
+}
+
+// ── TREE RENDER ────────────────────────────────────────────────────────────
+function renderTree(cat) {
+  const r = countNode(cat, [cat.name]);
+  const pct = r.total ? Math.round((r.done / r.total) * 100) : 0;
+  const area = document.getElementById('tree-area');
+  area.innerHTML = `
+    <div id="tree-header">
+      <h2>${cleanName(cat.name)}</h2>
+      <div class="progress-row">
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <span class="prog-label">${r.done} / ${r.total} herramientas completadas (${pct}%)</span>
+      </div>
+      <p style="margin-top:8px;font-size:11px;color:var(--text3)">
+        Marca cada herramienta cuando la hayas probado y aprendido a usar.
+        Un grupo se considera completo cuando todas sus herramientas esten marcadas.
+      </p>
+    </div>
+    <div id="tree-root">${renderNode(cat, [cat.name], true)}</div>`;
+}
+
+function renderNode(node, path, isRoot = false) {
+  if (!node.children || node.children.length === 0) {
+    // Leaf tool
+    return renderTool(node, path);
+  }
+  // Folder
+  const r = countNode(node, path);
+  const pct = r.total ? Math.round((r.done / r.total) * 100) : 0;
+  const progCls = r.done === r.total && r.total > 0 ? 'done' : (r.done > 0 ? 'partial' : '');
+  const folderId = 'fold_' + makeId(path.join('__'));
+
+  if (isRoot) {
+    // Root category: show children directly
+    return (node.children || []).map(ch => renderNode(ch, [...path, ch.name])).join('');
+  }
+
+  return `
+    <div class="tree-folder">
+      <div class="folder-header" onclick="toggleFolder('${folderId}')">
+        <span class="folder-toggle" id="${folderId}_arrow">&#9658;</span>
+        <span class="folder-name">${cleanName(node.name)}</span>
+        <span class="folder-prog ${progCls}">${r.done}/${r.total} &mdash; ${pct}%</span>
+      </div>
+      <div class="folder-children" id="${folderId}">
+        ${(node.children || []).map(ch => renderNode(ch, [...path, ch.name])).join('')}
+      </div>
+    </div>`;
+}
+
+function renderTool(node, path) {
+  const id = makeId(path.join('__'));
+  const done = !!progress[id];
+  const flags = extractFlags(node.name);
+  const cleanN = cleanName(node.name);
+  const flagsHtml = flags.map(f => `<span class="flag flag-${f}">${f}</span>`).join('');
+  const linkHtml = node.url ? `<a class="tool-link" href="${node.url}" target="_blank">abrir</a>` : '';
+  return `
+    <div class="tool-row ${done ? 'done-tool' : ''}" id="row_${id}">
+      <input type="checkbox" class="tool-check" ${done ? 'checked' : ''} onchange="toggleTool('${id}', this.checked)" onclick="event.stopPropagation()">
+      <span class="tool-name">${cleanN}</span>
+      ${flagsHtml}
+      ${linkHtml}
+    </div>`;
+}
+
+function cleanName(n) {
+  return n.replace(/\s*\([TRMD]\)\s*/g, '').trim();
+}
+
+function toggleFolder(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById(id + '_arrow');
+  if (!el) return;
+  const open = el.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open', open);
+}
+
+// ── TOOL CHECK ─────────────────────────────────────────────────────────────
+function toggleTool(id, val) {
+  if (val) progress[id] = true;
+  else delete progress[id];
+  localStorage.setItem(STATE_KEY, JSON.stringify(progress));
+
+  // Update row style
+  const row = document.getElementById('row_' + id);
+  if (row) row.classList.toggle('done-tool', val);
+
+  // Refresh folder progress labels for current tree
+  refreshFolderLabels(currentCat, [currentCat.name]);
+  refreshSidebar();
+  updateOverall();
+  updateStats();
+}
+
+function refreshFolderLabels(node, path) {
+  if (!node.children || node.children.length === 0) return;
+  const r = countNode(node, path);
+  const pct = r.total ? Math.round((r.done / r.total) * 100) : 0;
+  const progCls = r.done === r.total && r.total > 0 ? 'done' : (r.done > 0 ? 'partial' : '');
+  const folderId = 'fold_' + makeId(path.join('__'));
+  const progEl = document.querySelector(`#${folderId}`)?.previousElementSibling?.querySelector('.folder-prog');
+  if (progEl) {
+    progEl.textContent = `${r.done}/${r.total} — ${pct}%`;
+    progEl.className = `folder-prog ${progCls}`;
+  }
+  // Update header progress bar
+  const headerBar = document.querySelector('#tree-header .prog-fill');
+  const headerLabel = document.querySelector('#tree-header .prog-label');
+  if (currentCat) {
+    const cr = countNode(currentCat, [currentCat.name]);
+    const cpct = cr.total ? Math.round((cr.done / cr.total) * 100) : 0;
+    if (headerBar) headerBar.style.width = cpct + '%';
+    if (headerLabel) headerLabel.textContent = `${cr.done} / ${cr.total} herramientas completadas (${cpct}%)`;
+  }
+  node.children.forEach(ch => refreshFolderLabels(ch, [...path, ch.name]));
+}
+
+// ── SEARCH ──────────────────────────────────────────────────────────────────
+function onSearch(q) {
+  if (!q.trim()) {
+    if (currentCat) renderTree(currentCat);
+    return;
+  }
+  const area = document.getElementById('tree-area');
+  const lower = q.toLowerCase();
+  const matches = allTools.filter(t => t.name.toLowerCase().includes(lower)).slice(0, 50);
+
+  area.innerHTML = `
+    <div id="tree-header">
+      <h2>Resultados para: "${esc(q)}"</h2>
+      <p style="font-size:11px;color:var(--text3)">${matches.length} herramientas encontradas</p>
+    </div>
+    <div id="search-results">
+      ${matches.map(t => {
+        const done = !!progress[t.id];
+        const flags = t.flags.map(f => `<span class="flag flag-${f}">${f}</span>`).join('');
+        const linkHtml = t.url ? `<a class="tool-link" href="${t.url}" target="_blank">abrir</a>` : '';
+        return `
+          <div class="search-match">
+            <input type="checkbox" class="tool-check" ${done ? 'checked' : ''} onchange="toggleTool('${t.id}', this.checked)" onclick="event.stopPropagation()">
+            <span class="search-tool-name" style="${done ? 'color:var(--green2);text-decoration:line-through;opacity:.8' : ''}">${cleanName(t.name)}</span>
+            ${flags}
+            <span class="search-path">${t.path.slice(0, -1).join(' > ')}</span>
+            ${linkHtml}
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── START ──────────────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>

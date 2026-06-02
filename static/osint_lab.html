@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberSec Lab</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e13;--bg2:#0f1419;--bg3:#161c24;--bg4:#1e2733;
+  --border:#2a3542;--border2:#3a4a5c;
+  --green:#00ff88;--green2:#00cc66;--blue:#4fc3f7;--blue2:#0288d1;
+  --yellow:#ffd54f;--orange:#ff9800;--red:#f44336;--purple:#ce93d8;
+  --text:#c9d1d9;--text2:#8b949e;--text3:#6e7681;
+}
+body{background:var(--bg);color:var(--text);font-family:'Consolas','Monaco',monospace;display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{width:260px;min-width:260px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+#sidebar-header{padding:16px;border-bottom:1px solid var(--border)}
+#sidebar-header h1{font-size:13px;color:var(--green);letter-spacing:2px;text-transform:uppercase}
+#sidebar-header p{font-size:11px;color:var(--text3);margin-top:4px}
+.phase-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;position:relative}
+.phase-item:hover:not(.locked-phase){background:var(--bg3)}
+.phase-item.active-phase{background:var(--bg4);border-left:3px solid var(--green)}
+.phase-item.locked-phase{opacity:.4;cursor:not-allowed}
+.phase-num{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+.phase-name{font-size:13px;color:var(--text);margin-top:2px;font-weight:600}
+.phase-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.phase-bar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+.phase-bar-fill{height:100%;background:var(--green);border-radius:2px;transition:width .4s}
+.phase-lock{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#topbar h2{font-size:14px;color:var(--green);flex:1}
+.group-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.group-tab{padding:5px 12px;border-radius:4px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2);transition:all .15s}
+.group-tab:hover:not(.locked-tab){border-color:var(--border2);color:var(--text)}
+.group-tab.active-tab{background:var(--green);color:#000;border-color:var(--green);font-weight:700}
+.group-tab.done-tab{background:var(--bg3);border-color:var(--green2);color:var(--green2)}
+.group-tab.locked-tab{opacity:.35;cursor:not-allowed}
+
+#content{flex:1;overflow-y:auto;padding:20px}
+.group-header{margin-bottom:16px}
+.group-header h3{font-size:16px;color:var(--blue);margin-bottom:4px}
+.group-header p{font-size:12px;color:var(--text3)}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.tool-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;position:relative}
+.tool-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.tool-card.completed{border-color:var(--green2);background:linear-gradient(135deg,var(--bg3),#0d1f15)}
+.tool-card.completed::after{content:'✓';position:absolute;top:10px;right:12px;color:var(--green);font-size:18px;font-weight:700}
+.tc-flags{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.flag{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;letter-spacing:.5px}
+.flag-web{background:#1a3a5c;color:var(--blue)}
+.flag-tool{background:#1a2a1a;color:var(--green)}
+.flag-paid{background:#2a1a0a;color:var(--orange)}
+.flag-win{background:#2a1a2a;color:var(--purple)}
+.flag-linux{background:#1a2a1a;color:#8bc34a}
+.tc-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+.tc-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.tc-diff{display:flex;gap:3px;margin-top:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.dot.on{background:var(--green)}
+.dot.med{background:var(--yellow)}
+.dot.hard{background:var(--red)}
+
+/* MODAL */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center}
+#modal-overlay.open{display:flex}
+#modal{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;width:820px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column}
+#modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+#modal-title{font-size:16px;font-weight:700;color:var(--green);flex:1}
+#modal-close{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:4px}
+#modal-close:hover{color:var(--text);background:var(--bg4)}
+.modal-tabs{display:flex;border-bottom:1px solid var(--border)}
+.modal-tab{padding:10px 20px;font-size:12px;font-family:inherit;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s}
+.modal-tab:hover{color:var(--text)}
+.modal-tab.active{color:var(--green);border-bottom-color:var(--green)}
+.modal-body{flex:1;overflow-y:auto;padding:20px}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.theory h4{color:var(--blue);margin:14px 0 6px;font-size:13px}
+.theory p,.theory li{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:6px}
+.theory ul{padding-left:16px}
+.theory .note{background:var(--bg4);border-left:3px solid var(--yellow);padding:8px 12px;border-radius:0 4px 4px 0;margin:10px 0;font-size:12px;color:var(--text2)}
+.theory code{background:var(--bg4);padding:1px 5px;border-radius:3px;color:var(--green);font-size:11px}
+
+.exercise-task{background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:12px}
+.task-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.task-num{width:22px;height:22px;border-radius:50%;background:var(--blue2);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.task-title{font-size:13px;font-weight:600;color:var(--text)}
+.task-desc{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6}
+.cmd-block{background:#050a0f;border:1px solid var(--border);border-radius:4px;padding:10px 14px;font-family:monospace;font-size:12px;color:var(--green);position:relative;margin-bottom:8px;white-space:pre-wrap;word-break:break-all;padding-right:70px}
+.copy-btn{position:absolute;top:6px;right:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:2px 8px;border-radius:3px;cursor:pointer;font-family:inherit}
+.copy-btn:hover{color:var(--text);border-color:var(--border2)}
+.task-check{display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer}
+.task-check input{width:14px;height:14px;accent-color:var(--green);cursor:pointer}
+.task-check span{font-size:11px;color:var(--text3)}
+
+.complete-section label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;margin-top:14px}
+.complete-section textarea{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:10px;font-family:inherit;font-size:12px;resize:vertical;min-height:80px}
+.complete-section textarea:focus{outline:none;border-color:var(--blue2)}
+.task-summary{background:var(--bg4);border-radius:4px;padding:10px;margin:10px 0;font-size:11px;color:var(--text2)}
+.submit-btn{width:100%;padding:12px;background:var(--green);color:#000;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px;transition:background .15s}
+.submit-btn:hover{background:var(--green2)}
+.submit-btn:disabled{background:var(--border);color:var(--text3);cursor:not-allowed}
+.success-banner{background:#0d2a1a;border:1px solid var(--green2);border-radius:6px;padding:12px;margin-top:12px;font-size:12px;color:var(--green);display:none}
+.success-banner.show{display:block}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>CyberSec Lab</h1>
+    <p>Metodologia ofensiva guiada</p>
+  </div>
+  <div id="phases-nav"></div>
+</div>
+<div id="main">
+  <div id="topbar">
+    <h2 id="topbar-title">-</h2>
+    <div class="group-tabs" id="group-tabs"></div>
+  </div>
+  <div id="content"></div>
+</div>
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <span id="modal-title">-</span>
+      <button id="modal-close">X</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="theory">Teoria</button>
+      <button class="modal-tab" data-tab="exercise">Ejercicio</button>
+      <button class="modal-tab" data-tab="complete">Completar</button>
+    </div>
+    <div class="modal-body">
+      <div id="tab-theory" class="tab-content active"></div>
+      <div id="tab-exercise" class="tab-content"></div>
+      <div id="tab-complete" class="tab-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {phases:[
+{id:1,name:"Recon. Pasivo",sub:"OSINT",groups:[
+  {id:"1.1",name:"Busqueda e Internet",desc:"Operadores avanzados de busqueda para encontrar informacion expuesta publicamente.",tools:[
+    {id:"google_dorks",name:"Google Dorks",flags:["web"],diff:[1,1,0],desc:"Operadores avanzados de Google para localizar informacion expuesta.",
+     theory:`<h4>Que son los Google Dorks?</h4><p>Operadores de busqueda avanzada que permiten afinar consultas a Google para encontrar informacion especifica indexada publicamente. Son la base del reconocimiento pasivo.</p><h4>Operadores esenciales</h4><ul><li><code>site:dominio.com</code> limita resultados a un dominio</li><li><code>filetype:pdf</code> busca tipos de archivo</li><li><code>inurl:admin</code> URL que contiene 'admin'</li><li><code>intitle:"index of"</code> directorios abiertos</li><li><code>intext:"password"</code> texto dentro de la pagina</li><li><code>cache:dominio.com</code> version en cache de Google</li></ul><h4>Google Hacking Database (GHDB)</h4><p>Base de datos de dorks por categoria: paneles de administracion, archivos con credenciales, dispositivos vulnerables, etc.</p><div class="note">Usar solo en dominios con autorizacion. Google puede bloquear IP con muchas busquedas automatizadas.</div>`,
+     tasks:[
+       {title:"Documentos publicos expuestos",desc:"Busca documentos PDF publicos de un dominio objetivo.",cmd:"site:tesla.com filetype:pdf",check:"Encontraste documentos PDF indexados?"},
+       {title:"Paneles de administracion",desc:"Localiza posibles rutas de administracion expuestas.",cmd:"site:tesla.com inurl:admin OR inurl:login OR inurl:dashboard",check:"Aparecen URLs con rutas administrativas?"},
+       {title:"Directorios abiertos",desc:"Detecta servidores con listado de directorio habilitado.",cmd:'site:tesla.com intitle:"index of /"',check:"Hay directorios sin proteccion?"},
+       {title:"Credenciales en Pastebin",desc:"Busca filtraciones de credenciales relacionadas con el objetivo.",cmd:'site:pastebin.com "tesla.com" password OR credential',check:"Aparecen pastes con datos sensibles?"},
+       {title:"Busqueda en GHDB",desc:"Explora la Google Hacking Database para dorks especializados.",cmd:"https://www.exploit-db.com/google-hacking-database",check:"Encontraste categorias relevantes en GHDB?"},
+     ]},
+    {id:"bing_dorks",name:"Bing Dorks",flags:["web"],diff:[1,0,0],desc:"Operadores de Bing que indexan contenido diferente a Google.",
+     theory:`<h4>Por que usar Bing ademas de Google?</h4><p>Bing indexa paginas que Google no tiene o ha eliminado. Tiene su propio conjunto de operadores y a veces revela mas subdominios y archivos expuestos.</p><h4>Operadores especificos de Bing</h4><ul><li><code>site:</code> igual que Google</li><li><code>ip:x.x.x.x</code> busca por IP directamente (exclusivo de Bing)</li><li><code>filetype:</code> tipos de archivo</li><li><code>contains:extension</code> paginas con links a ese tipo de archivo</li></ul><div class="note">El operador ip: de Bing es exclusivo y util para encontrar otros dominios en la misma IP.</div>`,
+     tasks:[
+       {title:"Busqueda por IP",desc:"Encuentra todos los dominios alojados en la misma IP que el objetivo.",cmd:"ip:8.8.8.8",check:"Aparecen otros dominios en esa IP?"},
+       {title:"Archivos expuestos",desc:"Busca archivos de configuracion sensibles.",cmd:"site:tesla.com filetype:env OR filetype:config OR filetype:xml",check:"Encontraste archivos de configuracion?"},
+     ]},
+    {id:"shodan_web",name:"Shodan (Pasivo)",flags:["web","paid"],diff:[1,1,0],desc:"Motor de busqueda de dispositivos conectados a Internet.",
+     theory:`<h4>Que es Shodan?</h4><p>Shodan escanea continuamente Internet y almacena los banners de respuesta de servicios. Permite buscar dispositivos por SO, version de software, puerto, pais, organizacion y mas.</p><h4>Filtros principales</h4><ul><li><code>org:"Tesla"</code> dispositivos de una organizacion</li><li><code>hostname:tesla.com</code> por hostname</li><li><code>port:22</code> por puerto</li><li><code>country:ES</code> por pais</li><li><code>product:"Apache"</code> por software</li><li><code>vuln:CVE-2021-44228</code> dispositivos vulnerables a un CVE</li></ul><div class="note">Cuenta gratuita: 2 paginas de resultados. Plan basico ~69 USD para historial y exportacion.</div>`,
+     tasks:[
+       {title:"Buscar organizacion",desc:"Localiza infraestructura publica asociada a una empresa.",cmd:"https://www.shodan.io/search?query=org%3A%22Tesla%22",check:"Cuantos dispositivos aparecen? Que puertos predominan?"},
+       {title:"Servicios expuestos",desc:"Filtra puertos sensibles en el objetivo.",cmd:"https://www.shodan.io/search?query=hostname%3Atesla.com",check:"Que servicios tiene expuestos?"},
+       {title:"Analisis de IP individual",desc:"Consulta el perfil completo de una IP.",cmd:"https://www.shodan.io/host/8.8.8.8",check:"Que puertos y servicios reporta Shodan?"},
+     ]},
+    {id:"censys",name:"Censys",flags:["web","paid"],diff:[1,1,0],desc:"Alternativa a Shodan con foco en certificados TLS y ASNs.",
+     theory:`<h4>Censys vs Shodan</h4><p>Censys escanea Internet con mas foco en certificados TLS y datos de ASN. Muy util para descubrir subdominios a traves de los certificados emitidos.</p><h4>Busquedas utiles</h4><ul><li>Por certificado: <code>services.tls.certificates.leaf_data.subject.common_name: tesla.com</code></li><li>Por organizacion: <code>autonomous_system.organization: "Tesla"</code></li><li>Por puerto: <code>services.port: 8443</code></li></ul><div class="note">API gratuita: 250 consultas/mes. Interfaz web gratuita con registro.</div>`,
+     tasks:[
+       {title:"Buscar por dominio",desc:"Encuentra hosts y certificados asociados al dominio objetivo.",cmd:"https://search.censys.io/hosts?q=services.tls.certificates.leaf_data.subject.common_name%3A+tesla.com",check:"Cuantos hosts aparecen con certificados del dominio?"},
+       {title:"Perfil de certificado",desc:"Analiza los certificados TLS emitidos.",cmd:"https://search.censys.io/certificates?q=parsed.subject.common_name%3A+tesla.com",check:"Que subdominios revelan los certificados?"},
+     ]},
+  ]},
+  {id:"1.2",name:"Dominios e Infraestructura",desc:"Enumeracion pasiva de dominios, subdominios, DNS, IPs y registros historicos.",tools:[
+    {id:"crtsh",name:"crt.sh",flags:["web"],diff:[1,0,0],desc:"Certificate Transparency logs para descubrir subdominios.",
+     theory:`<h4>Certificate Transparency</h4><p>Cada vez que se emite un certificado TLS, se registra en logs publicos. crt.sh indexa estos logs permitiendo descubrir subdominios que nunca aparecen en DNS publico.</p><ul><li>Revela subdominios internos que obtuvieron certificados publicos accidentalmente</li><li>Historial completo: subdominios eliminados siguen apareciendo</li><li>API JSON para automatizacion</li></ul>`,
+     tasks:[
+       {title:"Busqueda web basica",desc:"Busca todos los certificados emitidos para un dominio.",cmd:"https://crt.sh/?q=%25.tesla.com",check:"Cuantos subdominios unicos aparecen?"},
+       {title:"API JSON lista limpia",desc:"Obtén lista de subdominios unicos via API.",cmd:'curl -s "https://crt.sh/?q=%25.tesla.com&output=json" | python -m json.tool | grep "name_value" | sort -u',check:"Exportaste la lista de subdominios?"},
+       {title:"Subdominios de tercer nivel",desc:"Busca estructuras mas profundas.",cmd:"https://crt.sh/?q=%25.%25.tesla.com",check:"Hay subdominios de tercer nivel interesantes?"},
+     ]},
+    {id:"viewdns",name:"ViewDNS.info",flags:["web"],diff:[1,0,0],desc:"Suite OSINT para WHOIS, DNS, reverse IP e historial.",
+     theory:`<h4>Herramientas incluidas en ViewDNS</h4><ul><li><strong>WHOIS</strong>: registrante, fechas, nameservers</li><li><strong>DNS Lookup</strong>: registros A, MX, NS, TXT, CNAME</li><li><strong>Reverse IP</strong>: otros dominios en la misma IP</li><li><strong>IP History</strong>: historial de IPs asociadas al dominio</li><li><strong>Reverse Whois</strong>: dominios registrados por la misma empresa</li></ul>`,
+     tasks:[
+       {title:"WHOIS del objetivo",desc:"Obtén informacion del registrante y fechas del dominio.",cmd:"https://viewdns.info/whois/?domain=tesla.com",check:"Quien es el registrante? Cuando expira?"},
+       {title:"Registros DNS completos",desc:"Enumera todos los registros DNS publicos.",cmd:"https://viewdns.info/dnsrecord/?domain=tesla.com",check:"Que registros MX y TXT existen?"},
+       {title:"Reverse IP",desc:"Descubre otros dominios alojados en la misma IP.",cmd:"https://viewdns.info/reverseip/?host=tesla.com",check:"Cuantos dominios comparten la IP?"},
+       {title:"Historial de IPs",desc:"Consulta IPs anteriores del dominio.",cmd:"https://viewdns.info/iphistory/?domain=tesla.com",check:"Ha cambiado de IP recientemente?"},
+     ]},
+    {id:"dnsdumpster",name:"DNSdumpster",flags:["web"],diff:[1,0,0],desc:"Mapeo visual de infraestructura DNS con grafico de relaciones.",
+     theory:`<h4>Que ofrece DNSdumpster?</h4><p>Combina multiples fuentes para construir un mapa completo de la infraestructura DNS. Genera un grafico visual exportable.</p><ul><li>Subdominios descubiertos automaticamente</li><li>Registros A, MX, NS, TXT consolidados</li><li>Geolocalizacion por IP</li><li>Exportacion a Excel y PNG</li></ul>`,
+     tasks:[
+       {title:"Mapeo de infraestructura",desc:"Genera el mapa DNS completo del objetivo.",cmd:"https://dnsdumpster.com/ -> introducir tesla.com",check:"Cuantos subdominios y registros encontro?"},
+       {title:"Exportar grafico",desc:"Descarga el grafico visual de la infraestructura.",cmd:"Boton Export to .png en DNSdumpster",check:"Guardaste el mapa de infraestructura?"},
+     ]},
+    {id:"netcraft",name:"Netcraft",flags:["web"],diff:[1,1,0],desc:"Historial de tecnologias web, hosting y uptime de un dominio.",
+     theory:`<h4>Netcraft Site Report</h4><p>Revela la tecnologia del servidor, historial de IPs, proveedor de hosting, OS del servidor y ranking de popularidad. Lleva decadas monitorizando sitios web.</p><ul><li>Stack tecnologico detectado (Apache, nginx, IIS, versiones)</li><li>Sistema operativo del servidor</li><li>Historial de cambios de IP y hosting</li><li>Subdomain finder integrado</li></ul>`,
+     tasks:[
+       {title:"Site Report",desc:"Obtén el informe completo del objetivo.",cmd:"https://sitereport.netcraft.com/?url=https://tesla.com",check:"Que tecnologia de servidor usa? Que OS?"},
+       {title:"Subdomain finder",desc:"Usa el buscador de subdominios de Netcraft.",cmd:"https://searchdns.netcraft.com/?restriction=site+ends+with&host=tesla.com",check:"Encontraste subdominios nuevos?"},
+     ]},
+    {id:"bgpview",name:"BGPView / ASN",flags:["web"],diff:[1,1,0],desc:"Informacion de ASN, rangos de IP y prefijos de red de una organizacion.",
+     theory:`<h4>ASN - Autonomous System Number</h4><p>Cada organizacion grande tiene uno o mas ASNs que agrupan sus rangos de IPs. Conocer el ASN permite identificar TODOS los rangos de IP del objetivo.</p><ul><li>BGPView.io: busqueda por empresa, IP o ASN</li><li>bgp.he.net: Hurricane Electric, muy completo</li></ul><div class="note">Con el ASN obtienes todos los rangos CIDR del objetivo, util para escaneos posteriores autorizados.</div>`,
+     tasks:[
+       {title:"Buscar ASN por empresa",desc:"Encuentra el numero de sistema autonomo de la organizacion objetivo.",cmd:"https://bgpview.io/search#search=Tesla",check:"Cual es el ASN de Tesla? Cuantos prefijos tiene?"},
+       {title:"Prefijos IP del ASN",desc:"Lista todos los rangos de IP bajo ese ASN.",cmd:"https://bgpview.io/asn/XXXXXX#prefixes-v4",check:"Cuantos rangos IP controla?"},
+     ]},
+  ]},
+  {id:"1.3",name:"Email e Identidad",desc:"Investigacion de direcciones de correo, brechas de datos y huellas digitales.",tools:[
+    {id:"hunter",name:"Hunter.io",flags:["web","paid"],diff:[1,0,0],desc:"Descubrimiento de emails corporativos y verificacion de existencia.",
+     theory:`<h4>Hunter.io - Email Intelligence</h4><p>Agrega emails encontrados en fuentes publicas. Permite descubrir el patron de emails de una empresa y verificar si una direccion existe.</p><ul><li><strong>Domain Search</strong>: todos los emails de un dominio</li><li><strong>Email Finder</strong>: construye el email probable dado nombre + dominio</li><li><strong>Email Verifier</strong>: confirma si el email acepta correos</li><li>API: 25 busquedas/mes gratis</li></ul>`,
+     tasks:[
+       {title:"Domain Search",desc:"Busca todos los emails publicos de una empresa.",cmd:"https://hunter.io/domain-search -> tesla.com",check:"Cual es el patron de email detectado? (ej: {first}.{last}@)"},
+       {title:"Email Finder",desc:"Construye el email probable de una persona.",cmd:"https://hunter.io/email-finder -> tesla.com + nombre",check:"Encontro un email con puntuacion alta de confianza?"},
+       {title:"Verificacion de email",desc:"Comprueba si un email encontrado es valido.",cmd:"https://hunter.io/email-verifier -> email@tesla.com",check:"El email es deliverable?"},
+     ]},
+    {id:"hibp",name:"HaveIBeenPwned",flags:["web"],diff:[1,0,0],desc:"Verificacion de emails en brechas de datos conocidas.",
+     theory:`<h4>HIBP - Have I Been Pwned</h4><p>Base de datos con mas de 12 mil millones de cuentas filtradas. Permite saber en que brechas aparece un email y que datos fueron expuestos.</p><h4>API k-anonymity para contrasenas</h4><p>Envia solo los primeros 5 caracteres del hash SHA1. El servidor devuelve todos los hashes que empiezan igual y tu compruebas localmente. La contrasena nunca sale de tu maquina.</p>`,
+     tasks:[
+       {title:"Busqueda de email web",desc:"Comprueba si un email aparece en brechas conocidas.",cmd:"https://haveibeenpwned.com/ -> introducir email",check:"En cuantas brechas aparece? Que datos se filtraron?"},
+       {title:"API de email",desc:"Consulta la API directamente.",cmd:'curl -s "https://haveibeenpwned.com/api/v3/breachedaccount/test@example.com" -H "hibp-api-key: TU_KEY"',check:"Que brechas devuelve la API?"},
+       {title:"Verificacion de contrasena (k-anonymity)",desc:"Comprueba si una contrasena ha sido filtrada sin revelarla.",cmd:`# PowerShell:
+$pass = "Password123"
+$sha1 = [System.BitConverter]::ToString(
+  [System.Security.Cryptography.SHA1]::Create().ComputeHash(
+    [System.Text.Encoding]::UTF8.GetBytes($pass)
+  )) -replace '-',''
+$prefix = $sha1.Substring(0,5)
+$suffix = $sha1.Substring(5)
+$resp = Invoke-RestMethod "https://api.pwnedpasswords.com/range/$prefix"
+$resp -split "\`n" | Where-Object { $_ -like "$suffix*" }`,check:"Aparece el sufijo en la lista? Cuantas veces fue vista?"},
+     ]},
+    {id:"emailrep",name:"EmailRep.io",flags:["web"],diff:[1,0,0],desc:"Reputacion y analisis de riesgo de una direccion de email.",
+     theory:`<h4>EmailRep - Reputacion de Email</h4><p>Analiza un email y devuelve: si existe en brechas, presencia en redes sociales, si es de dominio desechable, antiguedad estimada y score de reputacion.</p><ul><li>Detecta emails temporales/desechables</li><li>Indica presencia en plataformas (LinkedIn, GitHub, etc.)</li><li>Score de 0-100 de confianza</li><li>API gratuita: 10 req/hora sin key</li></ul>`,
+     tasks:[
+       {title:"Consulta web",desc:"Analiza la reputacion de un email desde la web.",cmd:"https://emailrep.io/ -> introducir email",check:"Que score de reputacion tiene? En que plataformas aparece?"},
+       {title:"API directa",desc:"Consulta la API REST de EmailRep.",cmd:'curl -s "https://emailrep.io/elon@tesla.com"',check:"Que campos devuelve la respuesta JSON?"},
+     ]},
+    {id:"holehe",name:"Holehe",flags:["tool","linux"],diff:[1,1,0],desc:"Comprueba en que servicios online esta registrado un email.",
+     theory:`<h4>Holehe - Email to registered accounts</h4><p>Herramienta Python que verifica en mas de 120 servicios si un email esta registrado, usando los flujos de recuperacion de contrasena. No hace login, no deja rastro.</p>`,
+     tasks:[
+       {title:"Instalacion",desc:"Instala holehe en tu entorno.",cmd:"pip install holehe",check:"Se instalo sin errores?"},
+       {title:"Busqueda basica",desc:"Comprueba en que servicios esta registrado un email.",cmd:"holehe target@email.com",check:"En cuantos servicios aparece registrado?"},
+       {title:"Solo resultados positivos",desc:"Filtra para ver solo los servicios donde SI esta registrado.",cmd:"holehe target@email.com --only-used",check:"Que servicios devuelve con --only-used?"},
+       {title:"Exportar a CSV",desc:"Guarda los resultados para el informe.",cmd:"holehe target@email.com --only-used -C output.csv",check:"Se genero el archivo output.csv?"},
+     ]},
+  ]},
+  {id:"1.4",name:"Usuarios y Redes Sociales",desc:"Busqueda de perfiles, aliases y presencia en plataformas online.",tools:[
+    {id:"sherlock",name:"Sherlock",flags:["tool","linux"],diff:[1,1,0],desc:"Busqueda de username en mas de 400 redes sociales.",
+     theory:`<h4>Sherlock - Username Hunter</h4><p>Herramienta Python que busca un nombre de usuario en mas de 400 sitios y redes sociales. Util para correlacionar identidades online de un objetivo.</p><ul><li>Codigo abierto, mantenido activamente</li><li>Soporta proxies y Tor</li><li>Output en TXT, CSV o impresion directa</li><li>Busqueda de multiples usernames a la vez</li></ul>`,
+     tasks:[
+       {title:"Instalacion",desc:"Clona e instala Sherlock.",cmd:"git clone https://github.com/sherlock-project/sherlock\ncd sherlock\npip install -r requirements.txt",check:"Funciona python sherlock/sherlock.py --help?"},
+       {title:"Busqueda basica",desc:"Busca un username en todas las plataformas.",cmd:"python sherlock/sherlock.py objetivo_username",check:"Cuantos perfiles encontro? Lista los mas relevantes."},
+       {title:"Guardar en archivo",desc:"Exporta los resultados a un archivo de texto.",cmd:"python sherlock/sherlock.py objetivo_username --output resultados.txt",check:"Se guardo el archivo con los URLs encontrados?"},
+       {title:"Multiples usernames",desc:"Busca variaciones de un alias a la vez.",cmd:"python sherlock/sherlock.py user1 user2 user3",check:"Que variantes tienen mas presencia?"},
+     ]},
+    {id:"whatsmyname",name:"WhatsMyName",flags:["web","tool"],diff:[1,0,0],desc:"Enumeracion de username en cientos de sitios con interfaz web.",
+     theory:`<h4>WhatsMyName Web</h4><p>Similar a Sherlock pero con interfaz web. Usa una lista de sitios mantenida en GitHub y verifica la existencia del perfil en cada uno.</p><ul><li>Interfaz web sin instalacion</li><li>Lista de sitios actualizada en GitHub</li><li>Resultados con enlace directo al perfil</li></ul>`,
+     tasks:[
+       {title:"Busqueda web",desc:"Busca un username desde la interfaz web.",cmd:"https://whatsmyname.app/ -> introducir username objetivo",check:"En que plataformas tiene perfil?"},
+       {title:"Verificacion manual",desc:"Visita y documenta los perfiles encontrados mas relevantes.",cmd:"# Abre los 5 perfiles mas relevantes y documenta la informacion publica",check:"Que informacion publica obtuviste de los perfiles?"},
+     ]},
+    {id:"namechk",name:"Namechk",flags:["web"],diff:[1,0,0],desc:"Verifica disponibilidad de username en redes y dominios simultaneamente.",
+     theory:`<h4>Namechk</h4><p>Comprueba si un username esta registrado o disponible en decenas de redes sociales y dominios de forma simultanea. Util para confirmar identidad de un objetivo o detectar cuentas secundarias.</p>`,
+     tasks:[
+       {title:"Verificacion de username",desc:"Comprueba en que plataformas esta registrado el alias.",cmd:"https://namechk.com/ -> introducir username",check:"Que plataformas muestran el username como OCUPADO?"},
+     ]},
+    {id:"twint",name:"Twint",flags:["tool","linux"],diff:[1,1,1],desc:"Scraping avanzado de Twitter/X sin necesidad de API key.",
+     theory:`<h4>Twint - Twitter Intelligence</h4><p>Herramienta Python para extraer tweets, seguidores y mas de Twitter/X sin usar la API oficial.</p><ul><li>Sin limite de rate de API</li><li>Busqueda por usuario, keyword, geolocalizacion o hashtag</li><li>Exportacion a JSON, CSV o SQLite</li></ul><div class="note">Twitter/X ha endurecido el acceso. Twint puede dar errores. Alternativa: Nitter instances.</div>`,
+     tasks:[
+       {title:"Instalacion",desc:"Instala Twint.",cmd:"pip install twint",check:"Se instalo? Prueba con twint --help"},
+       {title:"Tweets de un usuario",desc:"Extrae los ultimos tweets de un objetivo.",cmd:"twint -u elonmusk -l 50 -o tweets.json --json",check:"Se extrajo el JSON con los tweets?"},
+       {title:"Busqueda por keyword",desc:"Busca menciones de una empresa o persona.",cmd:"twint -s \"tesla security\" --since 2024-01-01 -o keyword.csv --csv",check:"Aparecen menciones relevantes?"},
+     ]},
+  ]},
+  {id:"1.5",name:"Personas y Telefonos",desc:"OSINT sobre personas fisicas: telefonos, identidad y datos publicos.",tools:[
+    {id:"truecaller",name:"TrueCaller",flags:["web"],diff:[1,0,0],desc:"Base de datos global de numeros de telefono con nombres.",
+     theory:`<h4>TrueCaller</h4><p>Base de datos con miles de millones de numeros recopilados de la agenda de contactos de usuarios que instalaron la app.</p><ul><li>Cobertura alta en Espana y Latinoamerica</li><li>Web: busqueda basica gratuita</li><li>App movil: mas informacion con cuenta</li></ul><div class="note">Busca siempre con prefijo internacional: +34 para Espana.</div>`,
+     tasks:[
+       {title:"Busqueda web",desc:"Busca informacion asociada a un numero de telefono.",cmd:"https://www.truecaller.com/search/es/+34-XXX-XXX-XXX",check:"Que nombre aparece asociado al numero?"},
+       {title:"Verificacion de tu propio numero",desc:"Comprueba que informacion tiene TrueCaller sobre ti.",cmd:"Busca tu propio numero en TrueCaller",check:"Que datos tuyos aparecen? Quieres hacer un opt-out?"},
+     ]},
+    {id:"phoneinfoga",name:"PhoneInfoga",flags:["tool","linux"],diff:[1,1,0],desc:"OSINT avanzado sobre numeros de telefono.",
+     theory:`<h4>PhoneInfoga</h4><p>Herramienta Go que agrega informacion de multiples fuentes sobre un numero: validacion, operadora, pais, busquedas en Google y mas.</p><ul><li>Validacion de numero (formato, operadora, pais)</li><li>Genera Google Dorks automaticos para ese numero</li><li>Interfaz web local o CLI</li></ul>`,
+     tasks:[
+       {title:"Instalacion (Docker)",desc:"La forma mas sencilla de instalar PhoneInfoga.",cmd:'docker pull sundowndev/phoneinfoga\ndocker run -it sundowndev/phoneinfoga scan -n "+34XXXXXXXXX"',check:"Devuelve informacion sobre el numero?"},
+       {title:"Interfaz web local",desc:"Lanza la interfaz web de PhoneInfoga.",cmd:"docker run -p 5000:5000 sundowndev/phoneinfoga serve",check:"Puedes acceder a http://localhost:5000?"},
+     ]},
+    {id:"pipl",name:"Pipl / PeopleFinders",flags:["web","paid"],diff:[1,0,0],desc:"Motores de busqueda de personas con datos publicos agregados.",
+     theory:`<h4>People Search Engines</h4><p>Motores especializados en agregar informacion publica sobre personas: nombre, direccion, email, telefono, familiares, historial laboral y redes sociales.</p><ul><li>Pipl: el mas completo, orientado a profesionales (de pago)</li><li>Spokeo: buena cobertura en EEUU</li><li>PeopleFinders: gratuito con informacion basica</li><li>192.com: especifico para Reino Unido</li></ul><div class="note">Usar respetando la legislacion local (GDPR en Europa). Solo para investigacion autorizada.</div>`,
+     tasks:[
+       {title:"Busqueda de persona",desc:"Busca informacion publica sobre una persona (usa tu propio nombre para la practica).",cmd:"https://www.peoplefinders.com -> buscar nombre propio",check:"Que informacion publica agregada aparece?"},
+     ]},
+  ]},
+  {id:"1.6",name:"Imagenes y Metadatos",desc:"Analisis OSINT de imagenes: busqueda inversa y metadatos EXIF.",tools:[
+    {id:"exiftool",name:"ExifTool",flags:["tool","linux","win"],diff:[1,0,0],desc:"Extraccion de metadatos EXIF de imagenes y documentos.",
+     theory:`<h4>Metadatos EXIF</h4><p>Los archivos de imagen contienen metadatos invisibles: coordenadas GPS, modelo de camara/telefono, fecha y hora exacta, software de edicion y nombre del autor.</p><h4>ExifTool</h4><p>Herramienta estandar para leer y editar metadatos de casi cualquier formato: JPG, PNG, PDF, Word, MP4, etc.</p><div class="note">Muchas redes sociales eliminan los EXIF al subir imagenes. Las imagenes enviadas por email o descargadas de webs suelen conservarlos.</div>`,
+     tasks:[
+       {title:"Instalacion",desc:"Instala ExifTool en tu sistema.",cmd:"# Kali/Debian:\nsudo apt install libimage-exiftool-perl\n# Windows: descargar de https://exiftool.org",check:"Funciona el comando exiftool -ver?"},
+       {title:"Extraccion de metadatos basica",desc:"Analiza los metadatos de una imagen.",cmd:"exiftool imagen.jpg",check:"Hay coordenadas GPS? Que dispositivo la tomo?"},
+       {title:"Buscar GPS en directorio",desc:"Extrae solo coordenadas GPS de forma masiva.",cmd:"exiftool -GPSLatitude -GPSLongitude -r ./directorio/",check:"Alguna imagen tiene coordenadas GPS?"},
+       {title:"Limpiar metadatos",desc:"Elimina todos los metadatos de una imagen (OPSEC propio).",cmd:"exiftool -all= imagen.jpg",check:"Se eliminaron todos los metadatos?"},
+     ]},
+    {id:"reverse_image",name:"Busqueda Inversa de Imagenes",flags:["web"],diff:[1,0,0],desc:"Google Images, TinEye y Yandex para encontrar el origen de una imagen.",
+     theory:`<h4>Reverse Image Search</h4><p>Permite encontrar el origen de una imagen, versiones de mayor resolucion, otros sitios donde aparece y en el caso de caras, perfiles de redes sociales.</p><ul><li>Google Images: mejor para fotos de personas y lugares</li><li>TinEye: especializado en rastrear la primera aparicion de una imagen</li><li>Yandex Images: especialmente bueno para reconocimiento facial</li><li>PimEyes: busqueda facial avanzada (de pago)</li></ul>`,
+     tasks:[
+       {title:"Google Reverse Image",desc:"Sube o pega URL de imagen en Google Images.",cmd:"https://images.google.com -> icono camara -> subir imagen",check:"Encontro otras apariciones de la imagen?"},
+       {title:"TinEye - primera aparicion",desc:"Encuentra cuando y donde aparecio la imagen por primera vez.",cmd:"https://tineye.com -> subir imagen",check:"Cuantas coincidencias? Cual es la mas antigua?"},
+       {title:"Yandex - reconocimiento facial",desc:"Usa Yandex para identificar personas en fotos.",cmd:"https://yandex.com/images -> buscar por imagen",check:"Encontro perfiles o paginas relacionadas con la persona?"},
+     ]},
+  ]},
+  {id:"1.7",name:"Documentos y Metadatos",desc:"Extraccion de metadatos de documentos publicos (PDFs, DOCX, etc.).",tools:[
+    {id:"foca",name:"FOCA",flags:["tool","win"],diff:[1,1,1],desc:"Extraccion de metadatos masiva de documentos indexados en un dominio.",
+     theory:`<h4>FOCA - Fingerprinting Organizations with Collected Archives</h4><p>FOCA busca en Google, Bing y DuckDuckGo todos los documentos publicos de un dominio, los descarga y extrae sus metadatos automaticamente.</p><h4>Que puede encontrar</h4><ul><li>Nombres de usuarios del sistema (autor del documento)</li><li>Nombres de servidores internos (rutas de red)</li><li>Software utilizado y versiones</li><li>Correos electronicos y nombres de empleados</li></ul><div class="note">FOCA es solo para Windows. Requiere .NET Framework.</div>`,
+     tasks:[
+       {title:"Instalacion",desc:"Descarga e instala FOCA.",cmd:"https://github.com/ElevenPaths/FOCA -> Releases -> descargar FOCA.zip",check:"Se abre FOCA sin errores?"},
+       {title:"Nuevo proyecto",desc:"Crea un proyecto para el dominio objetivo.",cmd:"1. File -> New Project\n2. Introduce tesla.com\n3. Activa Google, Bing, DuckDuckGo\n4. Selecciona: PDF, DOCX, XLSX, PPT",check:"Se creo el proyecto?"},
+       {title:"Busqueda y descarga",desc:"Ejecuta la busqueda de documentos.",cmd:"Boton Search All -> esperar -> Download All",check:"Cuantos documentos encontro y descargo?"},
+       {title:"Extraccion de metadatos",desc:"Analiza los metadatos de los documentos descargados.",cmd:"Seleccionar todos -> clic derecho -> Extract Metadata\nRevisar pestana Metadata",check:"Encontraste nombres de usuario, servidores o software interno?"},
+     ]},
+    {id:"metagoofil",name:"Metagoofil",flags:["tool","linux"],diff:[1,1,0],desc:"Alternativa Linux a FOCA para extraccion de metadatos de documentos.",
+     theory:`<h4>Metagoofil</h4><p>Herramienta Python para Linux que busca documentos publicos de un dominio usando Google y extrae sus metadatos. Perfecta para Kali Linux.</p>`,
+     tasks:[
+       {title:"Instalacion",desc:"Instala metagoofil.",cmd:"sudo apt install metagoofil",check:"Funciona metagoofil --help?"},
+       {title:"Busqueda y extraccion",desc:"Busca y analiza documentos del objetivo.",cmd:"metagoofil -d tesla.com -t pdf,doc,xls -l 20 -o ./output/",check:"Que metadatos extrae de los documentos encontrados?"},
+     ]},
+  ]},
+  {id:"1.8",name:"Empresa y Organizacion",desc:"OSINT sobre estructura corporativa, empleados e infraestructura tecnica.",tools:[
+    {id:"theharvester",name:"theHarvester",flags:["tool","linux"],diff:[1,1,0],desc:"Recoleccion automatizada de emails, subdominios, IPs y hosts.",
+     theory:`<h4>theHarvester</h4><p>Herramienta incluida en Kali Linux que agrega resultados de multiples fuentes (Google, Bing, LinkedIn, Shodan) para recopilar emails, subdominios, IPs y hosts.</p><ul><li>+20 fuentes de datos configurables</li><li>Output en HTML, XML o JSON</li><li>Incluida por defecto en Kali Linux</li></ul>`,
+     tasks:[
+       {title:"Busqueda basica con Google",desc:"Ejecuta theHarvester contra el objetivo usando Google.",cmd:"theHarvester -d tesla.com -b google -l 100",check:"Que emails y subdominios encontro?"},
+       {title:"Multiples fuentes",desc:"Amplia la busqueda combinando fuentes.",cmd:"theHarvester -d tesla.com -b google,bing,linkedin,certspotter -l 200",check:"La combinacion de fuentes anade mas resultados?"},
+       {title:"Exportar informe HTML",desc:"Genera un informe visual de los resultados.",cmd:"theHarvester -d tesla.com -b all -l 200 -f informe_tesla",check:"Se genero el archivo HTML con los resultados?"},
+     ]},
+    {id:"linkedin_osint",name:"LinkedIn OSINT",flags:["web"],diff:[1,1,0],desc:"Reconocimiento de empleados, estructura y tecnologia via LinkedIn.",
+     theory:`<h4>LinkedIn como fuente OSINT</h4><p>LinkedIn revela empleados, cargos, tecnologias usadas (por habilidades listadas), oficinas, proveedores y mas.</p><ul><li>Google Dork: site:linkedin.com/in "tesla" "security engineer"</li><li>Perfiles de empleados revelan stack tecnologico</li><li>Ofertas de trabajo revelan tecnologias internas</li></ul>`,
+     tasks:[
+       {title:"Busqueda de empleados via Google",desc:"Encuentra perfiles de empleados sin necesitar cuenta LinkedIn.",cmd:'site:linkedin.com/in "tesla" "security" OR "IT" OR "network"',check:"Que empleados del area tecnica encontraste?"},
+       {title:"Analisis de ofertas de trabajo",desc:"Las ofertas revelan el stack tecnologico interno.",cmd:'site:linkedin.com/jobs "tesla" "security engineer" 2024',check:"Que tecnologias mencionan las ofertas?"},
+     ]},
+    {id:"crunchbase",name:"Crunchbase / OpenCorporates",flags:["web"],diff:[1,0,0],desc:"Informacion corporativa publica: inversiones, adquisiciones y filiales.",
+     theory:`<h4>Fuentes de informacion corporativa</h4><ul><li>Crunchbase: financiacion, inversores, adquisiciones, directivos</li><li>OpenCorporates: registro mercantil publico de 130+ paises</li><li>Companies House: registro UK muy detallado y gratuito</li><li>EDGAR (SEC): empresas cotizadas en EEUU</li></ul>`,
+     tasks:[
+       {title:"Perfil en Crunchbase",desc:"Obtén informacion corporativa del objetivo.",cmd:"https://www.crunchbase.com/organization/tesla-motors",check:"Cuantas filiales tiene? Quienes son los directivos?"},
+       {title:"Registro en OpenCorporates",desc:"Busca entidades legales asociadas.",cmd:"https://opencorporates.com/companies?q=tesla",check:"Que entidades legales aparecen en diferentes paises?"},
+     ]},
+  ]},
+  {id:"1.9",name:"URLs, Dominios y Analisis",desc:"Analisis de reputacion, historial y relaciones de URLs y dominios.",tools:[
+    {id:"virustotal",name:"VirusTotal",flags:["web"],diff:[1,0,0],desc:"Analisis de URLs, IPs, dominios y hashes con 70+ motores AV.",
+     theory:`<h4>VirusTotal</h4><p>Plataforma de Google que analiza archivos, URLs, IPs y dominios con mas de 70 motores antivirus. Muestra relaciones entre entidades (dominios, IPs, archivos).</p><ul><li>Relations: dominios, IPs y archivos relacionados</li><li>Details: registros DNS, WHOIS, certificados</li><li>Community: comentarios de investigadores</li></ul>`,
+     tasks:[
+       {title:"Analisis de dominio",desc:"Analiza las relaciones e historial de un dominio.",cmd:"https://www.virustotal.com/gui/domain/tesla.com/relations",check:"Que IPs y subdominios aparecen en Relations?"},
+       {title:"Verificar hash EICAR",desc:"Comprueba que VirusTotal detecta el archivo de prueba estandar.",cmd:"https://www.virustotal.com/gui/file/275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",check:"Cuantos motores lo detectan?"},
+       {title:"API - consulta de dominio",desc:"Usa la API gratuita de VirusTotal.",cmd:'curl -s "https://www.virustotal.com/api/v3/domains/tesla.com" -H "x-apikey: TU_API_KEY"',check:"Que datos devuelve la API en JSON?"},
+     ]},
+    {id:"urlscan",name:"urlscan.io",flags:["web"],diff:[1,0,0],desc:"Escaneo y analisis detallado de URLs con captura de pantalla.",
+     theory:`<h4>urlscan.io</h4><p>Servicio que visita y analiza URLs de forma segura: captura pantalla, registra todas las peticiones HTTP, cookies, scripts cargados e IPs contactadas.</p><ul><li>Historial de escaneos previos de cualquier dominio</li><li>Tecnologias detectadas (Wappalyzer integrado)</li><li>Captura de pantalla sin visitar la URL tu mismo</li></ul>`,
+     tasks:[
+       {title:"Buscar escaneos previos",desc:"Consulta el historial de analisis de un dominio.",cmd:"https://urlscan.io/search/#domain:tesla.com",check:"Cuantos escaneos previos hay? Que tecnologias aparecen?"},
+       {title:"Lanzar nuevo escaneo",desc:"Analiza una URL especifica de forma segura.",cmd:"https://urlscan.io/ -> introducir URL -> Submit (Public)",check:"Que recursos externos carga? Que tecnologias detecta?"},
+       {title:"API de busqueda",desc:"Consulta escaneos via API.",cmd:'curl -s "https://urlscan.io/api/v1/search/?q=domain:tesla.com&size=5"',check:"Que campos incluye cada resultado?"},
+     ]},
+    {id:"maltego",name:"Maltego",flags:["tool","win","linux","paid"],diff:[1,1,1],desc:"Plataforma visual de OSINT para mapear relaciones entre entidades.",
+     theory:`<h4>Maltego</h4><p>La herramienta OSINT mas potente para visualizar relaciones. Usa transforms para convertir una entidad (dominio, email, persona) en entidades relacionadas automaticamente.</p><ul><li>Domain -> IP, DNS, MX, Subdomains</li><li>Email -> Persona, Breaches, Social profiles</li><li>IP -> Geolocation, ASN, Open ports</li></ul><div class="note">Maltego CE (Community Edition) es gratuito con limite de 12 entidades por transform. Incluido en Kali Linux.</div>`,
+     tasks:[
+       {title:"Abrir Maltego CE",desc:"Lanza Maltego y crea una cuenta Community gratuita.",cmd:"maltego\n# Registrar cuenta CE en https://www.maltego.com/ce-registration/",check:"Puedes acceder a la interfaz principal?"},
+       {title:"Crear entidad Domain",desc:"Anade un dominio como punto de partida.",cmd:"1. New graph (Ctrl+T)\n2. Entity Palette -> Infrastructure -> Domain\n3. Arrastrar al canvas -> doble clic -> tesla.com",check:"Esta el dominio en el canvas?"},
+       {title:"Resolver DNS",desc:"Ejecuta transforms para resolver DNS del dominio.",cmd:"Clic derecho en dominio -> All Transforms -> DNS from Domain",check:"Que IPs y subdominios aparecen conectados?"},
+       {title:"Email a entidades relacionadas",desc:"Anade un email y explora sus conexiones.",cmd:"1. Anadir entidad Email -> persona@tesla.com\n2. Clic derecho -> All Transforms -> Email to...",check:"Que entidades nuevas aparecen vinculadas al email?"},
+     ]},
+    {id:"wayback",name:"Wayback Machine",flags:["web"],diff:[1,0,0],desc:"Historial de versiones archivadas de cualquier sitio web.",
+     theory:`<h4>Wayback Machine - archive.org</h4><p>Archivo de Internet con copias historicas de paginas web desde 1996. Permite ver versiones antiguas, recuperar contenido eliminado y encontrar endpoints ya no visibles.</p><ul><li>Versiones antiguas con tecnologias o rutas ya eliminadas</li><li>CDX API para listar todas las URLs archivadas de un dominio</li></ul>`,
+     tasks:[
+       {title:"Explorar historial web",desc:"Ve la evolucion del sitio objetivo a lo largo del tiempo.",cmd:"https://web.archive.org/web/*/tesla.com",check:"Cuando tiene mas capturas? Ha cambiado mucho el diseno?"},
+       {title:"CDX API - URLs archivadas",desc:"Lista todas las URLs indexadas del dominio en el archivo.",cmd:'curl -s "https://web.archive.org/cdx/search/cdx?url=*.tesla.com&output=text&fl=original&collapse=urlkey&limit=100"',check:"Aparecen rutas o subdominios ya eliminados?"},
+     ]},
+  ]},
+]},
+{id:2,name:"Recon. Activo",sub:"Escaneo & Enumeracion",groups:[],locked:true},
+{id:3,name:"Analisis Vuln.",sub:"Vulnerability Assessment",groups:[],locked:true},
+{id:4,name:"Explotacion",sub:"Exploitation",groups:[],locked:true},
+{id:5,name:"Post-Explotacion",sub:"Persistence & Lateral",groups:[],locked:true},
+{id:6,name:"Informe",sub:"Reporting",groups:[],locked:true},
+]};
+
+// STATE
+let state=JSON.parse(localStorage.getItem('lab_state')||'{"completed":{},"tasks":{}}');
+let currentPhase=1,currentGroup="1.1",currentTool=null;
+function saveState(){localStorage.setItem('lab_state',JSON.stringify(state));}
+function isToolDone(id){return !!state.completed[id];}
+function isGroupDone(gid){
+  const ph=DATA.phases.find(p=>p.id===currentPhase);
+  const gr=ph.groups.find(g=>g.id===gid);
+  return gr?gr.tools.every(t=>isToolDone(t.id)):false;
+}
+function isGroupUnlocked(gid){
+  const ph=DATA.phases.find(p=>p.id===currentPhase);
+  const idx=ph.groups.findIndex(g=>g.id===gid);
+  return idx===0||isGroupDone(ph.groups[idx-1].id);
+}
+function phaseProgress(pid){
+  const ph=DATA.phases.find(p=>p.id===pid);
+  if(!ph||!ph.groups.length)return 0;
+  const all=ph.groups.flatMap(g=>g.tools);
+  const done=all.filter(t=>isToolDone(t.id)).length;
+  return all.length?Math.round((done/all.length)*100):0;
+}
+
+// RENDER SIDEBAR
+function renderSidebar(){
+  document.getElementById('phases-nav').innerHTML=DATA.phases.map(p=>{
+    const prog=phaseProgress(p.id),act=p.id===currentPhase,lck=p.locked;
+    return `<div class="phase-item ${act?'active-phase':''} ${lck?'locked-phase':''}" onclick="${lck?'':('selectPhase('+p.id+')')}">
+      <div class="phase-num">Fase ${p.id}</div>
+      <div class="phase-name">${p.name}</div>
+      <div class="phase-sub">${p.sub}</div>
+      <div class="phase-bar"><div class="phase-bar-fill" style="width:${prog}%"></div></div>
+      ${lck?'<span class="phase-lock">&#128274;</span>':''}
+    </div>`;
+  }).join('');
+}
+
+// RENDER GROUPS + TOOLS
+function renderGroupTabs(){
+  const ph=DATA.phases.find(p=>p.id===currentPhase);
+  document.getElementById('topbar-title').textContent=`Fase ${ph.id} - ${ph.name} / ${ph.sub}`;
+  document.getElementById('group-tabs').innerHTML=ph.groups.map(g=>{
+    const ul=isGroupUnlocked(g.id),dn=isGroupDone(g.id),ac=g.id===currentGroup;
+    let cl='group-tab';
+    if(!ul)cl+=' locked-tab'; else if(dn)cl+=' done-tab';
+    if(ac)cl+=' active-tab';
+    return `<button class="${cl}" onclick="${ul?("selectGroup('"+g.id+"')"):''}"> ${g.id} ${g.name}</button>`;
+  }).join('');
+}
+
+function renderTools(){
+  const ph=DATA.phases.find(p=>p.id===currentPhase);
+  const gr=ph.groups.find(g=>g.id===currentGroup);
+  const el=document.getElementById('content');
+  if(!isGroupUnlocked(currentGroup)){
+    el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--text3)"><div style="font-size:40px;margin-bottom:16px">&#128274;</div><div style="font-size:14px">Completa el grupo anterior para desbloquear este.</div></div>`;
+    return;
+  }
+  const done=gr.tools.filter(t=>isToolDone(t.id)).length;
+  el.innerHTML=`<div class="group-header"><h3>${gr.id} - ${gr.name}</h3><p>${gr.desc} &nbsp;|&nbsp; ${done}/${gr.tools.length} completadas</p></div><div class="tools-grid">${gr.tools.map(renderCard).join('')}</div>`;
+}
+
+function renderCard(t){
+  const dn=isToolDone(t.id);
+  const flagMap={web:'WEB',tool:'TOOL',paid:'$',win:'WIN',linux:'LNX'};
+  const flagCls={web:'flag-web',tool:'flag-tool',paid:'flag-paid',win:'flag-win',linux:'flag-linux'};
+  const flags=t.flags.map(f=>`<span class="flag ${flagCls[f]||'flag-web'}">${flagMap[f]||f.toUpperCase()}</span>`).join('');
+  const dots=t.diff.map((on,i)=>`<div class="dot ${on?(i<1?'on':i<2?'med':'hard'):''}"></div>`).join('');
+  return `<div class="tool-card ${dn?'completed':''}" onclick="openTool('${t.id}')"><div class="tc-flags">${flags}</div><div class="tc-name">${t.name}</div><div class="tc-desc">${t.desc}</div><div class="tc-diff">${dots}</div></div>`;
+}
+
+// MODAL
+function findTool(id){for(const ph of DATA.phases)for(const gr of ph.groups||[])for(const t of gr.tools)if(t.id===id)return t;return null;}
+
+function openTool(id){
+  currentTool=findTool(id);
+  if(!currentTool)return;
+  document.getElementById('modal-title').textContent=currentTool.name;
+  document.getElementById('modal-overlay').classList.add('open');
+  switchTab('theory');
+  renderTheory();renderExercise();renderComplete();
+}
+
+function switchTab(name){
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.toggle('active',t.id===`tab-${name}`));
+}
+
+function renderTheory(){document.getElementById('tab-theory').innerHTML=`<div class="theory">${currentTool.theory}</div>`;}
+
+function renderExercise(){
+  const el=document.getElementById('tab-exercise');
+  if(!currentTool.tasks||!currentTool.tasks.length){el.innerHTML='<p style="color:var(--text3);font-size:12px">Sin tareas definidas.</p>';return;}
+  el.innerHTML=currentTool.tasks.map((task,i)=>{
+    const key=`${currentTool.id}_task_${i}`;
+    const chk=state.tasks[key]?'checked':'';
+    const cmdHtml=task.cmd?`<div class="cmd-block">${esc(task.cmd)}<button class="copy-btn" onclick="copyCmd(this,\`${task.cmd.replace(/`/g,'\\`')}\`)">Copiar</button></div>`:'';
+    return `<div class="exercise-task"><div class="task-header"><div class="task-num">${i+1}</div><div class="task-title">${task.title}</div></div><div class="task-desc">${task.desc}</div>${cmdHtml}<label class="task-check"><input type="checkbox" ${chk} onchange="toggleTask('${key}',this.checked)"><span>${task.check||'Marcar completada'}</span></label></div>`;
+  }).join('');
+}
+
+function renderComplete(){
+  const el=document.getElementById('tab-complete');
+  const dn=isToolDone(currentTool.id);
+  const prev=state.completed[currentTool.id]||{};
+  const taskList=(currentTool.tasks||[]).map((t,i)=>{
+    const ok=state.tasks[`${currentTool.id}_task_${i}`];
+    return `<li style="color:${ok?'var(--green2)':'var(--text3)'}">${ok?'v':'o'} ${t.title}</li>`;
+  }).join('');
+  el.innerHTML=`<div class="complete-section">
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Documenta tu experiencia con <strong style="color:var(--text)">${currentTool.name}</strong>. Se guardara en el RAG.</p>
+    <div class="task-summary"><strong style="font-size:11px;color:var(--text)">Tareas:</strong><ul style="margin-top:6px">${taskList}</ul></div>
+    <label>Que encontraste o aprendiste? (hallazgos, resultados, notas)</label>
+    <textarea id="findings" placeholder="Ej: Encontre 23 subdominios en crt.sh...">${prev.findings||''}</textarea>
+    <label>Como conecta esta herramienta con otras que ya has usado?</label>
+    <textarea id="connections" placeholder="Ej: Los subdominios de crt.sh los pase a theHarvester...">${prev.connections||''}</textarea>
+    <button class="submit-btn" onclick="submitComplete()">${dn?'Actualizar en RAG':'Documentar y guardar en RAG'}</button>
+    <div class="success-banner ${dn?'show':''}" id="success-banner">Guardado en el repositorio RAG correctamente.</div>
+  </div>`;
+}
+
+async function submitComplete(){
+  const findings=document.getElementById('findings').value.trim();
+  const connections=document.getElementById('connections').value.trim();
+  if(!findings){alert('Escribe al menos un hallazgo antes de guardar.');return;}
+  const btn=document.querySelector('.submit-btn');
+  btn.disabled=true;btn.textContent='Guardando...';
+  const tasksDone=(currentTool.tasks||[]).filter((_,i)=>state.tasks[`${currentTool.id}_task_${i}`]).map(t=>t.title);
+  const cmds=(currentTool.tasks||[]).filter(t=>t.cmd).map(t=>t.cmd.split('\n')[0]);
+  const ph=DATA.phases.find(p=>(p.groups||[]).some(g=>g.tools.some(t=>t.id===currentTool.id)));
+  try{
+    const r=await fetch('/api/lab/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tool_id:currentTool.id,tool_name:currentTool.name,phase:ph?.id||1,category:'OSINT',attack_phase:'reconnaissance',description:currentTool.desc,tasks_completed:tasksDone,commands_used:cmds,findings,connections})});
+    const d=await r.json();
+    if(d.ok){
+      state.completed[currentTool.id]={findings,connections,ts:new Date().toISOString()};
+      saveState();btn.textContent='Guardado correctamente';
+      document.getElementById('success-banner').classList.add('show');
+      renderSidebar();renderGroupTabs();renderTools();
+    }else throw new Error(d.detail||'Error desconocido');
+  }catch(e){btn.disabled=false;btn.textContent='Reintentar';alert('Error: '+e.message);}
+}
+
+function toggleTask(key,val){state.tasks[key]=val;saveState();renderComplete();}
+function copyCmd(btn,cmd){navigator.clipboard.writeText(cmd).then(()=>{btn.textContent='OK';setTimeout(()=>btn.textContent='Copiar',1500);});}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function selectPhase(id){currentPhase=id;const ph=DATA.phases.find(p=>p.id===id);if(ph.groups&&ph.groups.length)currentGroup=ph.groups[0].id;renderSidebar();renderGroupTabs();renderTools();}
+function selectGroup(id){if(!isGroupUnlocked(id))return;currentGroup=id;renderGroupTabs();renderTools();}
+
+document.querySelectorAll('.modal-tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+document.getElementById('modal-close').addEventListener('click',()=>document.getElementById('modal-overlay').classList.remove('open'));
+document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open');});
+
+renderSidebar();renderGroupTabs();renderTools();
+</script>
+</body>
+</html>
