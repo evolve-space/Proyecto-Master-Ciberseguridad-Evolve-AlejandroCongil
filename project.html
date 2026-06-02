@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CyberSec RAG — Sistema de inteligencia táctica para Red Team. Alejandro Congil Sainz.">
+<title>CyberSec RAG — Proyecto · Alejandro Congil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="ic-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 18V5"/><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/>
+    <path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/>
+    <path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/><path d="M18 18a4 4 0 0 0 2-7.464"/>
+    <path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/>
+    <path d="M6 18a4 4 0 0 1-2-7.464"/><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"/>
+  </symbol>
+  <symbol id="ic-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+  </symbol>
+  <symbol id="ic-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+  </symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+  </symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+  </symbol>
+  <symbol id="ic-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+  </symbol>
+  <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="ic-maximize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>
+  </symbol>
+  <symbol id="ic-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>
+  </symbol>
+  <symbol id="ic-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+  </symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+    <path d="m9 12 2 2 4-4"/>
+  </symbol>
+  <symbol id="ic-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+    <path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+    <circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/>
+  </symbol>
+  <symbol id="ic-swords" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/>
+    <line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/>
+    <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/>
+    <line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/>
+    <line x1="3" x2="5" y1="19" y2="21"/>
+  </symbol>
+  <symbol id="ic-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 20v2"/><path d="M12 2v2"/><path d="M17 20v2"/><path d="M17 2v2"/>
+    <path d="M2 12h2"/><path d="M2 17h2"/><path d="M2 7h2"/>
+    <path d="M20 12h2"/><path d="M20 17h2"/><path d="M20 7h2"/>
+    <path d="M7 20v2"/><path d="M7 2v2"/>
+    <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/>
+  </symbol>
+  <symbol id="ic-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/>
+    <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/>
+    <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>
+  </symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>
+  </symbol>
+  <symbol id="ic-dashboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/>
+    <rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
+  </symbol>
+  <symbol id="ic-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>
+  </symbol>
+  <symbol id="ic-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 16h8"/><path d="M7 11h12"/><path d="M7 6h3"/>
+  </symbol>
+  <symbol id="ic-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/>
+    <rect x="2" y="6" width="14" height="12" rx="2"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>
+  </symbol>
+  <symbol id="ic-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/>
+    <rect x="9" y="2" width="6" height="6" rx="1"/>
+    <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/>
+  </symbol>
+  <symbol id="ic-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>
+  </symbol>
+  <symbol id="ic-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </symbol>
+  <symbol id="ic-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/>
+    <path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>
+  </symbol>
+  <symbol id="ic-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>
+  </symbol>
+</svg>
+
+<style>
+:root {
+  --bg:#0A0A0F; --bg2:#0D0D14; --card:#111118; --card2:#16161F;
+  --border:rgba(0,212,255,.1); --border2:rgba(0,212,255,.28);
+  --cyan:#00D4FF; --cyan-dim:rgba(0,212,255,.12);
+  --green:#00FF88; --green-dim:rgba(0,255,136,.1);
+  --magenta:#C084FC; --gold:#FBBF24; --red:#F87171;
+  --text:#E2E8F0; --text2:#94A3B8; --text3:#475569;
+  --font-mono:'JetBrains Mono','Consolas',monospace;
+  --font-sans:'Inter',system-ui,sans-serif;
+  --glow-c:0 0 20px rgba(0,212,255,.35),0 0 60px rgba(0,212,255,.12);
+  --glow-g:0 0 20px rgba(0,255,136,.35),0 0 60px rgba(0,255,136,.12);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{color:var(--text);font-family:var(--font-sans);font-size:16px;line-height:1.65;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(0,212,255,.2);border-radius:2px}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(10,10,15,.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);padding:0 5%;
+}
+.nav-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;height:58px;gap:16px}
+.nav-back{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--font-mono);font-size:12px;color:var(--text2);
+  padding:6px 12px;border-radius:6px;border:1px solid var(--border);
+  transition:all .15s;
+}
+.nav-back:hover{color:var(--cyan);border-color:var(--border2)}
+.nav-back svg{width:14px;height:14px}
+.nav-title{font-family:var(--font-mono);font-size:13px;color:var(--cyan)}
+.nav-live{
+  margin-left:auto;display:flex;align-items:center;gap:7px;
+  font-family:var(--font-mono);font-size:11px;color:var(--green);
+  background:var(--green-dim);border:1px solid rgba(0,255,136,.22);
+  padding:4px 12px;border-radius:20px;
+}
+.live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.btn-fullscreen{
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  width:42px;height:42px;border-radius:10px;
+  border:1px solid var(--border2);
+  background:rgba(10,10,15,.85);backdrop-filter:blur(12px);
+  color:var(--cyan);cursor:pointer;
+  box-shadow:0 0 16px rgba(0,212,255,.18),0 4px 20px rgba(0,0,0,.5);
+  transition:background .15s,box-shadow .15s,transform .15s;
+}
+.btn-fullscreen:hover{
+  background:rgba(0,212,255,.15);
+  box-shadow:0 0 24px rgba(0,212,255,.35),0 4px 20px rgba(0,0,0,.5);
+  transform:scale(1.08);
+}
+.btn-fullscreen svg{pointer-events:none}
+
+/* WRAP */
+.wrap{max-width:1120px;margin:0 auto;padding:0 5%}
+
+/* PROJECT HERO */
+#proj-hero{
+  padding:100px 5% 72px;min-height:52vh;
+  display:flex;align-items:center;
+  position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0,212,255,.05) 0%, transparent 70%);
+}
+#proj-hero::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+  background-size:40px 40px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);
+}
+.proj-hero-inner{position:relative;z-index:1;max-width:760px}
+.proj-hero-inner .eyebrow{margin-bottom:12px}
+.proj-name{
+  font-family:var(--font-mono);font-size:clamp(36px,5.5vw,60px);
+  font-weight:700;letter-spacing:-1px;line-height:1.1;
+  color:var(--text);margin-bottom:16px;
+}
+.proj-name span{color:var(--cyan);text-shadow:var(--glow-c)}
+.proj-tagline{font-size:16px;color:var(--text2);max-width:560px;line-height:1.7;margin-bottom:28px}
+.tag{font-family:var(--font-mono);font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid}
+.tag-c{color:var(--cyan);border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.07)}
+.tag-g{color:var(--green);border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.07)}
+.tag-m{color:var(--magenta);border-color:rgba(192,132,252,.3);background:rgba(192,132,252,.07)}
+.tag-o{color:var(--gold);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.07)}
+.tag-row{display:flex;flex-wrap:wrap;gap:7px}
+
+/* SECTIONS */
+.section{padding:80px 0}
+.stripe{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.eyebrow{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--cyan);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px}
+.eyebrow-line{width:24px;height:1px;background:var(--cyan);opacity:.5}
+.section-title{font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.2}
+.section-sub{font-size:15px;color:var(--text2);margin-bottom:44px;max-width:520px;line-height:1.7}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:52px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border2)}
+.stat-val{font-family:var(--font-mono);font-size:clamp(26px,3vw,32px);font-weight:700;line-height:1;margin-bottom:6px}
+.stat-label{font-size:12px;color:var(--text2)}
+
+/* PIPELINE */
+.pipeline{display:flex;align-items:center;flex-wrap:wrap;gap:0;justify-content:center;margin-bottom:52px}
+.pipe-step{display:flex;flex-direction:column;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;min-width:96px;text-align:center;transition:border-color .2s,transform .2s}
+.pipe-step:hover{border-color:var(--border2);transform:translateY(-2px)}
+.pipe-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.pipe-icon svg{width:17px;height:17px}
+.pipe-name{font-family:var(--font-mono);font-size:11px;color:var(--text);font-weight:600}
+.pipe-sub{font-size:10px;color:var(--text3);line-height:1.4}
+.pipe-arrow{flex-shrink:0;color:var(--text3);font-size:16px;padding:0 4px;align-self:center;margin-top:-16px}
+
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:40px}
+.feat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;transition:border-color .2s,transform .2s}
+.feat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.feat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.feat-icon svg{width:16px;height:16px}
+.feat-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.feat-desc{font-size:12px;color:var(--text3);line-height:1.55}
+
+/* SCREENS */
+.screens-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.screen-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
+.screen-card:hover{border-color:var(--border2);box-shadow:0 0 40px rgba(0,212,255,.08)}
+.screen-bar{background:var(--card2);padding:9px 14px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--border)}
+.sbd-row{display:flex;gap:5px}
+.sbd{width:10px;height:10px;border-radius:50%}
+.sbd-r{background:#FF5F57}.sbd-y{background:#FFBD2E}.sbd-g{background:#28CA41}
+.s-title{font-family:var(--font-mono);font-size:11px;color:var(--text3);margin:0 auto}
+.s-tag{font-family:var(--font-mono);font-size:10px;color:var(--cyan);background:var(--cyan-dim);border:1px solid rgba(0,212,255,.18);padding:2px 8px;border-radius:10px}
+.screen-mock{background:var(--bg);padding:14px;min-height:190px;font-family:var(--font-mono);font-size:11px;overflow:hidden;position:relative}
+.screen-mock::after{content:'';position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(transparent,var(--bg));pointer-events:none}
+.screen-caption{padding:12px 16px;border-top:1px solid var(--border);background:var(--card2)}
+.screen-caption-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.screen-caption-sub{font-size:12px;color:var(--text3);line-height:1.5}
+.mock-topbar{background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:5px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;font-size:10px}
+.mock-sidebar-item{padding:4px 8px;border-radius:4px;margin-bottom:2px;font-size:10px;color:var(--text2)}
+.mock-sidebar-item.active{background:rgba(0,255,136,.12);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.mock-tabs{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px}
+.mock-tab{font-size:9px;padding:3px 7px;border-radius:4px;background:var(--card2);border:1px solid var(--border);color:var(--text2)}
+.mock-tab.active{background:rgba(0,255,136,.12);color:var(--green);border-color:rgba(0,255,136,.3)}
+.mock-cards{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mock-card{background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:7px}
+.mock-card-title{font-size:9px;font-weight:600;color:var(--text);margin-bottom:2px}
+.mock-card-sub{font-size:8px;color:var(--text3);line-height:1.4}
+.mock-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:2px 6px;border-radius:3px;margin:2px 1px;background:rgba(251,191,36,.12);color:var(--gold);border:1px solid rgba(251,191,36,.25)}
+.mock-progress-bar{height:3px;border-radius:2px;background:rgba(0,255,136,.12);margin-bottom:8px;overflow:hidden}
+.mock-progress-fill{height:100%;background:var(--green);border-radius:2px}
+.mock-cat-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:9px;color:var(--text2)}
+.mock-cat-row span{color:var(--text3)}
+
+/* ROADMAP */
+.rt-header{
+  display:flex;align-items:center;gap:14px;margin-bottom:36px;flex-wrap:wrap;
+}
+.rt-badge{
+  font-family:var(--font-mono);font-size:11px;padding:4px 14px;border-radius:20px;border:1px solid;
+}
+.rt-badge.active{color:var(--green);background:var(--green-dim);border-color:rgba(0,255,136,.3)}
+.rt-badge.planned{color:var(--gold);background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3)}
+.rt-badge.vision{color:var(--magenta);background:rgba(192,132,252,.1);border-color:rgba(192,132,252,.3)}
+
+.phase-track{position:relative;padding-left:28px}
+.phase-track::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:1px;background:linear-gradient(to bottom,var(--cyan),rgba(192,132,252,.4),transparent)}
+
+.phase-item{position:relative;margin-bottom:6px}
+.phase-header{
+  display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:16px 20px;cursor:pointer;
+  transition:border-color .2s,background .2s;
+  user-select:none;
+}
+.phase-header:hover{border-color:var(--border2)}
+.phase-header.open{background:var(--card2);border-color:var(--border2)}
+.phase-dot{
+  width:14px;height:14px;border-radius:50%;
+  position:absolute;left:-35px;top:18px;
+  border:2px solid var(--border2);background:var(--bg);
+  box-shadow:var(--glow-c);
+  transition:transform .2s;
+}
+.phase-dot.done{background:var(--green);border-color:var(--green);box-shadow:var(--glow-g)}
+.phase-dot.now{background:var(--cyan);border-color:var(--cyan);box-shadow:var(--glow-c);animation:pulse 2s infinite}
+.phase-dot.planned{border-color:var(--gold);background:var(--bg)}
+.phase-dot.vision{border-color:var(--magenta);background:var(--bg)}
+.phase-dot.locked{border-color:var(--text3);background:var(--bg);box-shadow:none}
+
+.phase-num{font-family:var(--font-mono);font-size:11px;color:var(--text3);white-space:nowrap}
+.phase-name{font-size:15px;font-weight:600;color:var(--text)}
+.phase-name-sub{font-size:12px;color:var(--text2);margin-top:1px}
+.phase-meta{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.phase-chevron{color:var(--text3);font-family:var(--font-mono);font-size:12px;transition:transform .25s}
+.phase-header.open .phase-chevron{transform:rotate(90deg)}
+
+.phase-body{
+  max-height:0;overflow:hidden;
+  transition:max-height .35s var(--ease),opacity .25s;
+  opacity:0;
+}
+.phase-body.open{max-height:800px;opacity:1}
+.phase-inner{
+  background:var(--bg2);border:1px solid var(--border);border-top:none;
+  border-radius:0 0 12px 12px;padding:20px 24px;
+  margin-top:-6px;
+}
+
+.phase-tasks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.task-item{
+  display:flex;align-items:flex-start;gap:9px;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;font-size:13px;color:var(--text2);
+}
+.task-item svg{width:14px;height:14px;flex-shrink:0;margin-top:2px}
+.task-item.done svg{color:var(--green)} .task-item.done{color:var(--text)}
+.task-item.active svg{color:var(--cyan)}
+.task-item.planned svg{color:var(--gold)}
+.task-item.vision svg{color:var(--magenta)}
+.task-item.locked svg{color:var(--text3)}
+
+.phase-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.phase-desc{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:12px}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.reveal.up{opacity:1;transform:translateY(0)}
+.rd1{transition-delay:.08s}.rd2{transition-delay:.16s}.rd3{transition-delay:.24s}
+
+/* RESPONSIVE */
+@media(max-width:860px){
+  .feat-grid{grid-template-columns:repeat(2,1fr)}
+  .screens-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .phase-tasks{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .feat-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .pipeline{justify-content:flex-start}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* ── WEBRING ─────────────────────────────────────────────────────────── */
+.webring{position:fixed;top:auto;right:auto;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;background:rgba(10,10,15,.88);border:1px solid rgba(0,255,136,.18);border-bottom:none;border-radius:50px;padding:5px 14px;z-index:9998;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 4px 24px rgba(0,0,0,.5)}
+.webring-label{font:500 9px/1 'JetBrains Mono',monospace;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:1.5px;margin-right:8px;white-space:nowrap}
+.webring-sep{width:1px;height:14px;background:rgba(255,255,255,.1);margin:0 6px}
+.webring a{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;color:rgba(255,255,255,.5);text-decoration:none;transition:color .2s,background .2s}
+.webring a:hover,.webring a.wr-active{color:#00ff88;background:rgba(0,255,136,.1)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="./index.html" class="nav-back">
+      <svg><use href="#ic-arrow-left"/></svg>
+      Portfolio
+    </a>
+    <span class="nav-title">// CyberSec RAG</span>
+    <div class="nav-live"><span class="live-dot"></span>En desarrollo activo</div>
+  </div>
+</nav>
+
+<!-- ── PROJECT HERO ───────────────────────────────────────────────────── -->
+<section id="proj-hero">
+  <div class="wrap">
+    <div class="proj-hero-inner">
+      <div class="eyebrow reveal"><span class="eyebrow-line"></span>proyecto personal</div>
+      <h1 class="proj-name reveal">CyberSec <span>RAG</span></h1>
+      <p class="proj-tagline reveal">
+        Sistema de inteligencia táctica personal construido para acelerar el camino hacia el
+        <strong style="color:var(--cyan)">Red Team profesional</strong>.
+        Indexa sesiones de clase, vídeos y ejercicios de ciberseguridad en una base de conocimiento
+        consultable con lenguaje natural — potenciada por Claude API, Whisper y ChromaDB.
+      </p>
+      <div class="tag-row reveal">
+        <span class="tag tag-c">Python</span>
+        <span class="tag tag-c">FastAPI</span>
+        <span class="tag tag-c">ChromaDB</span>
+        <span class="tag tag-g">Claude API</span>
+        <span class="tag tag-g">Whisper</span>
+        <span class="tag tag-g">faster-whisper</span>
+        <span class="tag tag-m">ONNX Embeddings</span>
+        <span class="tag tag-m">SSE Streaming</span>
+        <span class="tag tag-o">ffmpeg</span>
+        <span class="tag tag-o">PIL</span>
+        <span class="tag tag-o">PyMuPDF</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── BUILD LOG ─────────────────────────────────────────────────────── -->
+<div class="stripe">
+<div class="wrap">
+<div class="section">
+  <div class="eyebrow reveal"><span class="eyebrow-line"></span>build log</div>
+  <h2 class="section-title reveal">Sistema funcionando hoy</h2>
+  <p class="section-sub reveal">4 meses construyendo. El pipeline procesa múltiples fuentes y sirve conocimiento táctico en tiempo real a través de tres interfaces.</p>
+
+  <!-- Stats -->
+  <div class="stats-grid reveal">
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--cyan)" data-count="4146" data-suffix="">0</div>
+      <div class="stat-label">Fragmentos indexados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--green)" data-count="22" data-suffix="">0</div>
+      <div class="stat-label">Sesiones de clase</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--magenta)" data-count="1169" data-suffix="">0</div>
+      <div class="stat-label">Herramientas OSINT mapeadas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--gold)" data-count="33" data-suffix="">0</div>
+      <div class="stat-label">Categorías del framework</div>
+    </div>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="pipeline reveal">
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background:rgba(251,191,36,.1);color:var(--gold)"><svg><use href="#ic-folder"/></svg></div>
+      <span class="pipe-name">Entrada</span>
+      <span class="pipe-sub">ZIPs · MP4<br>PDF · MD · PNG</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background:rgba(0,212,255,.12);color:var(--cyan)"><svg><use href="#ic-cpu"/></svg></div>
+      <span class="pipe-name">Parseo</span>
+      <span class="pipe-sub">OCR · Whisper<br>Claude Vision</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background:rgba(0,212,255,.12);color:var(--cyan)"><svg><use href="#ic-layers"/></svg></div>
+      <span class="pipe-name">Chunking</span>
+      <span class="pipe-sub">1500 chars<br>overlap 200</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background:rgba(0,255,136,.1);color:var(--green)"><svg><use href="#ic-brain"/></svg></div>
+      <span class="pipe-name">Embeddings</span>
+      <span class="pipe-sub">ONNX local<br>sin coste API</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background:rgba(0,255,136,.1);color:var(--green)"><svg><use href="#ic-search"/></svg></div>
+      <span class="pipe-name">ChromaDB</span>
+      <span class="pipe-sub">Vector store<br>local</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background:rgba(192,132,252,.1);color:var(--magenta)"><svg><use href="#ic-zap"/></svg></div>
+      <span class="pipe-name">Claude API</span>
+      <span class="pipe-sub">Sonnet 4.6<br>SSE streaming</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background:rgba(251,191,36,.1);color:var(--gold)"><svg><use href="#ic-dashboard"/></svg></div>
+      <span class="pipe-name">3 Interfaces</span>
+      <span class="pipe-sub">RAG · Lab<br>Framework</span>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="feat-grid reveal">
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(0,212,255,.12);color:var(--cyan)"><svg><use href="#ic-video"/></svg></div>
+      <div class="feat-title">Video Intelligence</div>
+      <div class="feat-desc">Pipeline Whisper + Claude Vision. Frames cada 15s con deduplicación por píxel. Audio + imagen en documento único con timestamps.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(0,255,136,.1);color:var(--green)"><svg><use href="#ic-layers"/></svg></div>
+      <div class="feat-title">Multi-Source Ingestion</div>
+      <div class="feat-desc">ZIPs con PDFs, imágenes, Markdown y MP4. OCR con PyMuPDF, análisis visual con Claude Haiku. Hash-based deduplication.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(0,212,255,.12);color:var(--cyan)"><svg><use href="#ic-search"/></svg></div>
+      <div class="feat-title">Semantic Search RAG</div>
+      <div class="feat-desc">ChromaDB + embeddings ONNX locales. Filtros por sesión, categoría y tipo de fuente. Retrieval multi-source por consulta.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(0,255,136,.1);color:var(--green)"><svg><use href="#ic-dashboard"/></svg></div>
+      <div class="feat-title">Web Interface</div>
+      <div class="feat-desc">FastAPI + SSE streaming para respuestas en tiempo real. Carga de ZIPs via drag&drop. Badges de fuentes por respuesta.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(192,132,252,.1);color:var(--magenta)"><svg><use href="#ic-wrench"/></svg></div>
+      <div class="feat-title">OSINT Lab Portal</div>
+      <div class="feat-desc">35+ herramientas en 9 grupos secuenciales. Desbloqueo progresivo: completa un grupo para acceder al siguiente. Progreso en localStorage.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(251,191,36,.1);color:var(--gold)"><svg><use href="#ic-chart"/></svg></div>
+      <div class="feat-title">Framework Tracker</div>
+      <div class="feat-desc">Árbol interactivo con las 1169 herramientas del OSINT Framework. Checkboxes persistentes, barra de progreso por categoría.</div>
+    </div>
+  </div>
+
+  <!-- Screens -->
+  <div class="screens-grid reveal">
+    <div class="screen-card">
+      <div class="screen-bar">
+        <div class="sbd-row"><span class="sbd sbd-r"></span><span class="sbd sbd-y"></span><span class="sbd sbd-g"></span></div>
+        <span class="s-title">CyberSec RAG — Interfaz principal</span>
+        <span class="s-tag">FastAPI · SSE</span>
+      </div>
+      <div class="screen-mock">
+        <div class="mock-topbar">
+          <span style="color:var(--cyan)">◆ CYBERSEC-RAG</span>
+          <span style="color:var(--text3)">4146 fragmentos · 22 sesiones</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="width:120px;flex-shrink:0">
+            <div style="font-size:9px;color:var(--text3);margin-bottom:5px;letter-spacing:1px">FILTRAR</div>
+            <div class="mock-sidebar-item active">◆ Todo</div>
+            <div class="mock-sidebar-item">⊙ Conocimiento</div>
+            <div class="mock-sidebar-item">⊙ Metodología</div>
+            <div class="mock-sidebar-item">⊙ Herramientas</div>
+            <div class="mock-sidebar-item">⊙ Writeups</div>
+            <div class="mock-sidebar-item">⊙ Arsenal externo</div>
+          </div>
+          <div style="flex:1">
+            <div style="text-align:center;color:var(--green);font-size:10px;margin:6px 0 3px">Base de conocimiento activa</div>
+            <div style="text-align:center;color:var(--text3);font-size:9px;margin-bottom:8px">4146 fragmentos de 22 sesión(es)</div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:8px;font-size:9px;color:var(--text2)">
+              <div style="color:var(--text3);margin-bottom:4px">Estructura ZIP:</div>
+              <div style="color:var(--cyan)">▪ TRANSCRIPCIÓN.txt &nbsp; ▪ RESUMEN.txt</div>
+              <div style="color:var(--gold);margin-top:3px">▪ APUNTES/ &nbsp; ▪ sesion.xmind</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-caption">
+        <div class="screen-caption-title">RAG Chat · 5 categorías de conocimiento</div>
+        <div class="screen-caption-sub">Filtros: Conocimiento · Metodología · Herramientas · Writeups · Arsenal externo</div>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-bar">
+        <div class="sbd-row"><span class="sbd sbd-r"></span><span class="sbd sbd-y"></span><span class="sbd sbd-g"></span></div>
+        <span class="s-title">CyberSec Lab — Laboratorio OSINT</span>
+        <span class="s-tag">Fase 1 activa</span>
+      </div>
+      <div class="screen-mock">
+        <div style="display:flex;gap:8px">
+          <div style="width:100px;flex-shrink:0">
+            <div style="padding:7px;background:rgba(0,255,136,.08);border-left:2px solid var(--green);margin-bottom:3px">
+              <div style="font-size:8px;color:var(--text3)">FASE 1</div>
+              <div style="font-size:9px;color:var(--green);font-weight:700">Recon. Pasivo</div>
+            </div>
+            <div style="padding:5px;opacity:.35;font-size:8px;color:var(--text2)">— Recon. Activo</div>
+            <div style="padding:5px;opacity:.35;font-size:8px;color:var(--text2)">— Análisis Vuln.</div>
+            <div style="padding:5px;opacity:.35;font-size:8px;color:var(--text2)">— Explotación</div>
+            <div style="padding:5px;opacity:.35;font-size:8px;color:var(--text2)">— Post-Explot.</div>
+          </div>
+          <div style="flex:1;overflow:hidden">
+            <div class="mock-tabs" style="margin-bottom:6px">
+              <span class="mock-tab active">1.1 Búsqueda</span>
+              <span class="mock-tab">1.2 Dominios</span>
+              <span class="mock-tab">1.3 Email</span>
+              <span class="mock-tab">···</span>
+            </div>
+            <div style="font-size:9px;color:var(--cyan);margin-bottom:5px">1.1 — Búsqueda e Internet &nbsp;<span style="color:var(--text3)">0/4</span></div>
+            <div class="mock-cards">
+              <div class="mock-card"><div class="mock-card-title">Google Dorks</div><div class="mock-card-sub">Operadores avanzados de búsqueda.</div></div>
+              <div class="mock-card"><div class="mock-card-title">Shodan</div><div class="mock-card-sub">Dispositivos conectados a Internet.</div></div>
+              <div class="mock-card"><div class="mock-card-title">Censys</div><div class="mock-card-sub">Foco en certificados TLS/ASNs.</div></div>
+              <div class="mock-card"><div class="mock-card-title">Bing Dorks</div><div class="mock-card-sub">Indexación diferente a Google.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-caption">
+        <div class="screen-caption-title">OSINT Lab · 6 fases · 9 grupos secuenciales</div>
+        <div class="screen-caption-sub">Desbloqueo progresivo: cada grupo se abre al completar el anterior al 100%</div>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-bar">
+        <div class="sbd-row"><span class="sbd sbd-r"></span><span class="sbd sbd-y"></span><span class="sbd sbd-g"></span></div>
+        <span class="s-title">OSINT Framework Tracker</span>
+        <span class="s-tag">1169 tools</span>
+      </div>
+      <div class="screen-mock">
+        <div class="mock-topbar">
+          <span style="color:var(--green)">OSINT FRAMEWORK</span>
+          <span style="color:var(--text3)">0% (0/1169)</span>
+        </div>
+        <div class="mock-progress-bar"><div class="mock-progress-fill" style="width:0%"></div></div>
+        <div style="display:flex;gap:8px">
+          <div style="width:120px">
+            <div class="mock-cat-row">Username<span>0/19</span></div>
+            <div class="mock-cat-row">Email Address<span>0/30</span></div>
+            <div class="mock-cat-row">Domain Name<span>0/146</span></div>
+            <div class="mock-cat-row">IP &amp; MAC Addr.<span>0/56</span></div>
+            <div class="mock-cat-row">Social Networks<span>0/70</span></div>
+            <div class="mock-cat-row">Search Engines<span>0/77</span></div>
+            <div class="mock-cat-row" style="opacity:.4">···</div>
+          </div>
+          <div style="flex:1">
+            <div style="color:var(--cyan);font-size:10px;font-weight:700;margin-bottom:5px">Username</div>
+            <div style="background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:7px;font-size:9px">
+              <div style="display:flex;justify-content:space-between;color:var(--text2);padding:2px 0">Username Search Engines<span style="color:var(--text3)">0/12</span></div>
+              <div style="display:flex;justify-content:space-between;color:var(--text2);padding:2px 0">Specific Sites<span style="color:var(--text3)">0/7</span></div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:10px">
+              <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--green)">1169</div><div style="font-size:8px;color:var(--text3)">tools</div></div>
+              <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--cyan)">33</div><div style="font-size:8px;color:var(--text3)">cats</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-caption">
+        <div class="screen-caption-title">Framework Tracker · Árbol interactivo completo</div>
+        <div class="screen-caption-sub">Todas las categorías de osintframework.com mapeadas. Progreso persistente.</div>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-bar">
+        <div class="sbd-row"><span class="sbd sbd-r"></span><span class="sbd sbd-y"></span><span class="sbd sbd-g"></span></div>
+        <span class="s-title">RAG respondiendo consulta real</span>
+        <span class="s-tag">Multi-source</span>
+      </div>
+      <div class="screen-mock">
+        <div style="background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.15);border-radius:5px;padding:7px 10px;font-size:10px;color:var(--text);margin-bottom:7px">
+          &gt; Explicame que es bash con todo lo que has aprendido...
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px">
+          <span class="mock-badge">2026-04-27 · video_transcript</span>
+          <span class="mock-badge">2026-04-28 · video_transcript</span>
+          <span class="mock-badge">2026-04-24 · transcript</span>
+        </div>
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:5px;padding:9px;font-size:9px;line-height:1.7;color:var(--text2)">
+          <div style="color:var(--text);font-weight:700;margin-bottom:3px"># Bash: Explicación Técnica</div>
+          <div><span style="color:var(--text);font-weight:600">Bash</span> (Bourne Again SHell) es un intérprete de comandos de sistemas Unix/Linux que actúa como interfaz entre el usuario y el SO.</div>
+          <div style="margin-top:5px;color:var(--text)">## Encadenamiento de comandos</div>
+          <div>Operadores <span style="color:var(--green)">;</span> y <span style="color:var(--green)">&amp;&amp;</span> para secuencias...</div>
+        </div>
+      </div>
+      <div class="screen-caption">
+        <div class="screen-caption-title">Retrieval multi-fuente en acción</div>
+        <div class="screen-caption-sub">Recupera de video_transcript + transcript de múltiples sesiones simultáneamente</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ── RED TEAM ROADMAP ───────────────────────────────────────────────── -->
+<div>
+<div class="wrap">
+<div class="section">
+  <div class="eyebrow reveal"><span class="eyebrow-line"></span>red team roadmap</div>
+  <h2 class="section-title reveal">El camino hacia Red Team de élite</h2>
+  <p class="section-sub reveal">Cada fase del repositorio corresponde a una competencia real de Red Team. El sistema RAG acumula conocimiento táctico que se aplica en operaciones ofensivas.</p>
+
+  <div class="rt-header reveal">
+    <span class="rt-badge active">En curso</span>
+    <span class="rt-badge planned">Planificado</span>
+    <span class="rt-badge vision">Visión a largo plazo</span>
+  </div>
+
+  <div class="phase-track reveal">
+
+    <!-- FASE 1 -->
+    <div class="phase-item">
+      <div class="phase-dot now"></div>
+      <div class="phase-header open" onclick="togglePhase(this)">
+        <span class="phase-num">Fase 01</span>
+        <div>
+          <div class="phase-name">Reconocimiento Pasivo &amp; OSINT</div>
+          <div class="phase-name-sub">Inteligencia sin contacto — la base de todo Red Team</div>
+        </div>
+        <div class="phase-meta">
+          <span class="rt-badge active">En curso</span>
+          <span class="phase-chevron">›</span>
+        </div>
+      </div>
+      <div class="phase-body open">
+        <div class="phase-inner">
+          <p class="phase-desc">El OSINT es la primera hoja del Red Team. Antes de tocar un sistema, se mapea todo desde el exterior: infraestructura, personas, correos, dominios, credenciales expuestas. El repositorio acumula conocimiento sobre cada herramienta y técnica.</p>
+          <div class="phase-tasks">
+            <div class="task-item active"><svg><use href="#ic-zap"/></svg>9 grupos secuenciales en el OSINT Lab (1.1–1.9)</div>
+            <div class="task-item active"><svg><use href="#ic-zap"/></svg>1169 herramientas mapeadas en Framework Tracker</div>
+            <div class="task-item done"><svg><use href="#ic-check"/></svg>Google/Bing Dorks, Shodan, Censys — indexados</div>
+            <div class="task-item done"><svg><use href="#ic-check"/></svg>theHarvester, Sherlock, PhoneInfoga — indexados</div>
+            <div class="task-item active"><svg><use href="#ic-zap"/></svg>Hunter.io, HIBP, Holehe, EmailRep</div>
+            <div class="task-item active"><svg><use href="#ic-zap"/></svg>Maltego, Recon-ng, SpiderFoot</div>
+          </div>
+          <div class="phase-tools">
+            <span class="tag tag-g">Shodan</span><span class="tag tag-g">Maltego</span>
+            <span class="tag tag-g">theHarvester</span><span class="tag tag-g">Sherlock</span>
+            <span class="tag tag-g">Censys</span><span class="tag tag-g">FOCA</span>
+            <span class="tag tag-g">Recon-ng</span><span class="tag tag-g">SpiderFoot</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 2 -->
+    <div class="phase-item">
+      <div class="phase-dot planned"></div>
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-num">Fase 02</span>
+        <div>
+          <div class="phase-name">Reconocimiento Activo &amp; Enumeración</div>
+          <div class="phase-name-sub">Escaneo, fingerprinting y mapeo de superficie de ataque</div>
+        </div>
+        <div class="phase-meta">
+          <span class="rt-badge planned">Planificado</span>
+          <span class="phase-chevron">›</span>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-inner">
+          <p class="phase-desc">Con el mapa OSINT listo, se pasa al contacto directo. Escaneo de puertos, fingerprinting de servicios, enumeración de usuarios y recursos. El RAG acumulará methodologías y resultados de cada ejercicio práctico.</p>
+          <div class="phase-tasks">
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Nmap avanzado — scripts NSE y evasión</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Enum4linux, SMBclient, rpcclient</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Gobuster, Dirb, Feroxbuster — web enumeration</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Nikto, WhatWeb — fingerprinting web</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Automatización de escaneos con Python</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Integración resultados en RAG (XML → chunks)</div>
+          </div>
+          <div class="phase-tools">
+            <span class="tag tag-o">Nmap</span><span class="tag tag-o">Masscan</span>
+            <span class="tag tag-o">Gobuster</span><span class="tag tag-o">Nikto</span>
+            <span class="tag tag-o">Enum4linux</span><span class="tag tag-o">WhatWeb</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 3 -->
+    <div class="phase-item">
+      <div class="phase-dot planned"></div>
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-num">Fase 03</span>
+        <div>
+          <div class="phase-name">Análisis de Vulnerabilidades &amp; Explotación</div>
+          <div class="phase-name-sub">Identificación, priorización y explotación controlada</div>
+        </div>
+        <div class="phase-meta">
+          <span class="rt-badge planned">Planificado</span>
+          <span class="phase-chevron">›</span>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-inner">
+          <p class="phase-desc">El núcleo del Red Team: identificar vulnerabilidades reales y explotarlas de forma controlada. El RAG servirá como base de conocimiento de CVEs, exploits y metodologías, consultable durante engagements.</p>
+          <div class="phase-tasks">
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Metasploit Framework — metodología avanzada</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Manual exploitation — Buffer overflows, SQLi, XSS</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Burp Suite Pro — web application testing</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>CVE research pipeline → ingesta automática en RAG</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Exploit development con Python/C</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Laboratorios HTB/THM con writeups en RAG</div>
+          </div>
+          <div class="phase-tools">
+            <span class="tag tag-m">Metasploit</span><span class="tag tag-m">Burp Suite</span>
+            <span class="tag tag-m">SQLmap</span><span class="tag tag-m">Hydra</span>
+            <span class="tag tag-m">John/Hashcat</span><span class="tag tag-m">Exploit-DB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 4 -->
+    <div class="phase-item">
+      <div class="phase-dot planned"></div>
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-num">Fase 04</span>
+        <div>
+          <div class="phase-name">Post-Explotación &amp; Movimiento Lateral</div>
+          <div class="phase-name-sub">Persistencia, pivoting y escalada de privilegios</div>
+        </div>
+        <div class="phase-meta">
+          <span class="rt-badge planned">Planificado</span>
+          <span class="phase-chevron">›</span>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-inner">
+          <p class="phase-desc">Una vez dentro, el Red Teamer demuestra impacto real. Escalada de privilegios, pivoting, evasión de defensas y persistencia. El RAG acumulará TTPs, comandos y bypasses documentados en cada ejercicio.</p>
+          <div class="phase-tasks">
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Privilege escalation Linux/Windows — metodología</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Mimikatz, BloodHound — Active Directory attacks</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>C2 frameworks — Cobalt Strike, Sliver, Havoc</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>AV/EDR evasion techniques</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>Living-off-the-land (LOLBins)</div>
+            <div class="task-item planned"><svg><use href="#ic-clock"/></svg>MITRE ATT&amp;CK mapping automático en RAG</div>
+          </div>
+          <div class="phase-tools">
+            <span class="tag tag-c">BloodHound</span><span class="tag tag-c">Mimikatz</span>
+            <span class="tag tag-c">Sliver C2</span><span class="tag tag-c">Rubeus</span>
+            <span class="tag tag-c">CrackMapExec</span><span class="tag tag-c">PowerView</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 5 — VISIÓN -->
+    <div class="phase-item">
+      <div class="phase-dot vision"></div>
+      <div class="phase-header" onclick="togglePhase(this)">
+        <span class="phase-num">Fase 05</span>
+        <div>
+          <div class="phase-name">Red Team AI Assistant — Agente Autónomo</div>
+          <div class="phase-name-sub">El objetivo final: IA que planifica, ejecuta y documenta operaciones</div>
+        </div>
+        <div class="phase-meta">
+          <span class="rt-badge vision">Visión</span>
+          <span class="phase-chevron">›</span>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-inner">
+          <p class="phase-desc">La visión a largo plazo del repositorio: un asistente de Red Team impulsado por IA que consulta la base de conocimiento táctica, sugiere el siguiente paso del engagement, correlaciona TTPs con MITRE ATT&CK y genera el informe final.</p>
+          <div class="phase-tasks">
+            <div class="task-item vision"><svg><use href="#ic-bot"/></svg>Agente Claude con herramientas de recon autónomo</div>
+            <div class="task-item vision"><svg><use href="#ic-bot"/></svg>Integración con C2 frameworks via API</div>
+            <div class="task-item vision"><svg><use href="#ic-bot"/></svg>Correlación automática de hallazgos con MITRE</div>
+            <div class="task-item vision"><svg><use href="#ic-bot"/></svg>Generación automática de informes de pentest</div>
+            <div class="task-item vision"><svg><use href="#ic-bot"/></svg>Módulo de análisis de malware asistido por IA</div>
+            <div class="task-item vision"><svg><use href="#ic-bot"/></svg>Campaign planning: desde OSINT hasta exfiltración</div>
+          </div>
+          <div class="phase-tools">
+            <span class="tag tag-m">Claude Agents</span><span class="tag tag-m">Tool Use</span>
+            <span class="tag tag-m">C2 Integration</span><span class="tag tag-m">MITRE API</span>
+            <span class="tag tag-m">Auto-Reporting</span><span class="tag tag-m">RAG v2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end phase-track -->
+</div>
+</div>
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:22px 5%;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text3)">
+  <span style="color:var(--cyan)">alejandro@cybersec</span> ·
+  <a href="./index.html" style="color:var(--text2);transition:color .15s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--text2)'">← Volver al portfolio</a> ·
+  <span style="color:var(--cyan)">2026</span>
+</footer>
+
+<script>
+/* FULLSCREEN */
+function toggleFS() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const isFS = !!document.fullscreenElement;
+  document.getElementById('fs-icon-max').style.display = isFS ? 'none' : '';
+  document.getElementById('fs-icon-min').style.display = isFS ? '' : 'none';
+});
+
+/* ACCORDION */
+function togglePhase(header) {
+  const body = header.nextElementSibling;
+  const isOpen = header.classList.contains('open');
+  header.classList.toggle('open', !isOpen);
+  body.classList.toggle('open', !isOpen);
+}
+
+/* COUNTER */
+function countUp(el) {
+  const target = parseInt(el.dataset.count, 10);
+  const suffix = el.dataset.suffix || '';
+  const dur = 1200, start = performance.now();
+  (function step(now) {
+    const p = Math.min((now - start) / dur, 1);
+    el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * target) + (p >= 1 ? suffix : '');
+    if (p < 1) requestAnimationFrame(step);
+  })(start);
+}
+
+/* INTERSECTION OBSERVER */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('up');
+    e.target.querySelectorAll('[data-count]').forEach(countUp);
+    io.unobserve(e.target);
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+<nav class="webring" aria-label="Ecosistema del proyecto">
+  <span class="webring-label">Ecosistema</span>
+  <div class="webring-sep"></div>
+  <a href="https://alexc-projects.github.io/Proyecto-Master-Ciberseguridad-Evolve-AlejandroCongil" class="wr-active" title="Portfolio">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </a>
+  <a href="https://github.com/Alexc-projects/Proyecto-Master-Ciberseguridad-Evolve-AlejandroCongil" target="_blank" rel="noopener" title="GitHub">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+  </a>
+  <a href="https://dev.to/evolve-space/como-construi-un-sistema-rag-para-convertirme-en-red-teamer-con-ia-proyecto-en-evolve-4b2m" target="_blank" rel="noopener" title="Dev.to">
+    <svg width="15" height="15" viewBox="0 0 448 512" fill="currentColor"><path d="M120.12 208.29c-3.88-2.9-7.77-4.35-11.65-4.35H91.03v104.47h17.45c3.88 0 7.77-1.45 11.65-4.35s5.82-7.25 5.82-13.06v-69.65c-.01-5.8-1.96-10.16-5.83-13.06zM404.1 32H43.9C19.7 32 .06 51.59 0 75.8v360.4C.06 460.41 19.7 480 43.9 480h360.2c24.21 0 43.84-19.59 43.9-43.8V75.8c-.06-24.21-19.7-43.8-43.9-43.8zM154.2 291.19c0 18.81-11.61 47.31-48.36 47.25h-46.4V172.98h47.38c35.44 0 47.36 28.46 47.36 47.28l.02 70.93zm100.68-88.66H201.6v38.42h32.57v29.57H201.6v38.41h53.29v29.57h-62.18c-11.16.29-20.44-8.53-20.72-19.69V193.7c-.27-11.15 8.56-20.41 19.71-20.69h63.19l-.01 29.52zm103.64 115.29c-13.2 30.75-36.85 24.63-47.44 0l-38.53-144.8h32.57l29.71 113.72 29.57-113.72h32.58l-38.46 144.8z"/></svg>
+  </a>
+  <a href="https://www.linkedin.com/pulse/de-las-telecomunicaciones-al-red-team-c%C3%B3mo-uso-ia-mi-congil-sainz-z6h4e/" target="_blank" rel="noopener" title="LinkedIn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+  </a>
+  <a href="https://medium.com/@alejandro.congil5/de-t%C3%A9cnico-de-redes-a-red-teamer-la-ia-como-ventaja-competitiva-en-ciberseguridad-68975e56dd7d" target="_blank" rel="noopener" title="Medium">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13.54 12a6.8 6.8 0 0 1-6.77 6.82A6.8 6.8 0 0 1 0 12a6.8 6.8 0 0 1 6.77-6.82A6.8 6.8 0 0 1 13.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+  </a>
+</nav>
+
+<button class="btn-fullscreen" title="Pantalla completa" onclick="toggleFS()">
+  <svg id="fs-icon-max" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+  <svg id="fs-icon-min" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+</button>
+</body>
+</html>

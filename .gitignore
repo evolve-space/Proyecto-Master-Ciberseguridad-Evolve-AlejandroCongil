@@ -1,0 +1,42 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Datos generados — ChromaDB, procesados, logs (no subir)
+data/chroma_db/
+data/processed/
+data/processed_log.json
+data/inbox/*
+!data/inbox/.gitkeep
+
+# Claves y variables de entorno
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+
+# Archivos personales
+*.pdf
+*.mp4
+*.wav
+*.mp3
+linkedin_article.md
+setup.bat
